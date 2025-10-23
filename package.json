@@ -1,0 +1,20 @@
+{
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.14"
+  },
+  "name": "finsubs-movies",
+  "version": "1.0.0",
+  "description": "Collect movies that have **Finnish subtitles (non-AI translated)** from [OpenSubtitles](https://www.opensubtitles.com/), filter them by ratings, and add them to Radarr automatically.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SubOrbit{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='octopus_logo.png') }}">
+</head>
+
+<body class="flex flex-col min-h-[100vh] md:h-screen md:overflow-hidden overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-gray-100">
+
+    <!-- Navbar -->
+    <header class="flex items-center p-2 bg-black/30">
+        <img src="{{ url_for('static', filename='octopus_logo.png') }}" alt="Logo" class="h-12 mr-3">
+        <h1 class="text-2xl font-bold">SubOrbit</h1>
+    </header>
+
+    <main class="flex flex-col md:flex-row flex-1 md:overflow-hidden overflow-y-auto gap-2 p-2">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="p-4 text-center text-xs text-gray-400">
+        &copy; 2025 SubOrbit <a href="https://github.com/velinea/suborbit" class="underline text-blue-400" target="_blank">GitHub</a>   
+    </footer>
+</body>
+</html>
