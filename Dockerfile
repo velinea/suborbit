@@ -41,3 +41,11 @@ CMD ["gunicorn", "--bind", "0.0.0.0:5000", "suborbit.app:app"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD curl -fs http://localhost:5000/healthz || exit 1
+
+LABEL org.opencontainers.image.title="SubOrbit"
+LABEL org.opencontainers.image.description="Movie discovery app with subtitles, Radarr & Trakt integration."
+LABEL org.opencontainers.image.version=$APP_VERSION
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.url="https://github.com/<user>/suborbit"
+LABEL io.unraid.docker.icon="https://raw.githubusercontent.com/<user>/suborbit/main/suborbit/static/octopus_logo.png"
+
