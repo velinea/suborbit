@@ -38,3 +38,6 @@ COPY --from=frontend /app/suborbit/static/css ./suborbit/static/css
 
 EXPOSE 5000
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "suborbit.app:app"]
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl -fs http://localhost:5000/healthz || exit 1

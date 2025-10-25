@@ -104,3 +104,9 @@ def logs():
         with LOG_PATH.open("r", encoding="utf-8") as f:
             return jsonify(f.readlines()[-200:])
     return jsonify([])
+
+
+@core_bp.route("/healthz")
+def healthz():
+    """Basic health check for container monitors."""
+    return {"status": "ok", "message": "SubOrbit is healthy"}, 200
