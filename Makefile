@@ -1,7 +1,7 @@
 # === Tailwind Build Automation ===
 
-TAILWIND_INPUT = src/static/src/input.css
-TAILWIND_OUTPUT = src/static/css/tailwind.css
+TAILWIND_INPUT = suborbit/static/src/input.css
+TAILWIND_OUTPUT = suborbit/static/css/tailwind.css
 
 all: css
 

@@ -285,7 +285,7 @@
                         : "No description available.";
 
                     const card = document.createElement("a");
-                    card.href = m.tmdb || m.radarr || m.imdb || "#";
+                    card.href = m.radarr || m.tmdb || m.imdb || "#";
                     card.target = "_blank";
                     card.rel = "noopener noreferrer";
                     card.className =
@@ -294,7 +294,7 @@
                     card.innerHTML = `
         <!-- Poster -->
         <img src="${m.poster}" alt="${m.title}"
-             class="h-64 w-44 object-cover rounded-lg shadow-md group-hover:opacity-40 transition">
+             class="h-64 w-44 object-cover rounded-lg shadow-md opacity-0 animate-fadeIn group-hover:opacity-40 transition">
 
         <!-- Static info bar -->
         <div class="absolute bottom-0 left-0 right-0 bg-gray-900/80 text-gray-100 text-xs p-2 rounded-b-lg">
@@ -312,6 +312,7 @@
           </div>
         </div>
       `;
+                    card.style.animationDelay = `${Math.random() * 0.3}s`;
 
                     div.appendChild(card);
                 }

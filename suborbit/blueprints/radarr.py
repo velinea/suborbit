@@ -63,11 +63,15 @@ def recent():
         # URLs
         tmdb_id = m.get("tmdbId")
         imdb_id = m.get("imdbId")
-        radarr_id = m.get("id")
 
+        base_ui = radarr_base_url()
+        radarr_url = (
+            f"{base_ui}/movie/{tmdb_id or m.get('id')}"
+            if (tmdb_id or m.get("id"))
+            else None
+        )
         tmdb_url = f"https://www.themoviedb.org/movie/{tmdb_id}" if tmdb_id else None
         imdb_url = f"https://www.imdb.com/title/{imdb_id}" if imdb_id else None
-        radarr_url = f"{base_ui}/movie/{radarr_id}" if radarr_id else None
 
         recent.append(
             {
@@ -76,9 +80,9 @@ def recent():
                 "rating": rating,
                 "poster": img,
                 "overview": m.get("overview", ""),
+                "radarr": radarr_url,
                 "tmdb": tmdb_url,
                 "imdb": imdb_url,
-                "radarr": radarr_url,
             }
         )
 
