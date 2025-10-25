@@ -266,7 +266,7 @@
             div.innerHTML = "<p class='text-gray-400 text-sm'>Loading...</p>";
 
             try {
-                const res = await fetch("{{ url_for('radarr.recent') }}");
+                const res = await fetch("/api/radarr/recent");
                 const data = await res.json();
                 div.innerHTML = "";
 
@@ -334,7 +334,7 @@
             }
         }
         loadRecent();
-        document.getElementById("refresh-recent")
+        document.getElementById("refresh-posters")
             ?.addEventListener("click", loadRecent);
     </script>
 
