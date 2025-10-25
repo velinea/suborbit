@@ -32,17 +32,17 @@ docker run -d \
   --env-file /mnt/user/appdata/suborbit/.env \
   ghcr.io/yourusername/suborbit:latest
 ```
-After creating .env, open http://localhost:5000
+Open web UI http://localhost:5000
 
 ### 2. Configuration (.env)
 
 Example:
 ```
 # API KEYS
-TMDB_API_KEY=
-OS_API_KEY=
-OMDB_KEY=
-TRAKT_CLIENT_ID=
+TMDB_API_KEY=           # https://api.themoviedb.org/3/discover/movie
+OS_API_KEY=             # https://api.opensubtitles.com/api/v1/subtitles
+OMDB_KEY=               # http://www.omdbapi.com/
+TRAKT_CLIENT_ID=        # https://trakt.tv
 TRAKT_CLIENT_SECRET=
 
 RADARR_API=http://localhost:7878/api/v3
@@ -62,23 +62,22 @@ USE_IMDB=true
 USE_RT=true
 
 # RADARR
-QUALITY_PROFILE_ID=4
-ROOT_FOLDER=/movies
-SEARCH_FOR_MOVIE=false
+QUALITY_PROFILE_ID=4    # Wanted profile in Radarr, normally start from 1
+ROOT_FOLDER=/movies     # Your media root in Radarr
+SEARCH_FOR_MOVIE=false  # Start searching movie after adding to Radarr
 
 # SCRIPT BEHAVIOR
-QUIET_MODE=false
-DEBUG=true
+QUIET_MODE=false        # Print messages to log file
+DEBUG=true              # Print info/debug messages on Log window
 MAX_MOVIES_PER_RUN=5
-OS_DELAY=3
+OS_DELAY=3              # Delay (s) between queries to Opensubtitles.com 
 RANDOM_SELECTION=true
 
 # EXTRA FILTERS
 MIN_VOTE_COUNT=1000
 ALLOWED_GENRES=
-ALLOWED_LANGUAGES=
-MAX_DISCOVER_PAGES=
-SUBTITLE_LANG=
+MAX_DISCOVER_PAGES=     # TMDB discovery returns 20 items per page
+SUBTITLE_LANG=          # 2-letter ISO 639-1 language code
 
 ```
 ---
@@ -94,10 +93,8 @@ SUBTITLE_LANG=
 
 - Inside the container:
 ```bash
-python3 -m finsubs_core --start-year 2000 --end-year 2024 --lang fi
+python3 -m finsubs_core
 ```
-
-(See --help for all CLI options.)
 
 ---
 ### 🧩 Unraid Installation
@@ -109,7 +106,7 @@ https://github.com/yourusername/unraid-templates
 ```
 
 - Find SubOrbit in the Unraid “Apps” tab and click Install.
-- Configure /config volume and .env path.
+- Configure /config volume and .env settings.
 
 Access via http://[server_ip]:5000.
 

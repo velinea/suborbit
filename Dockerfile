@@ -1,26 +1,40 @@
-# Use a slim Python base image
-FROM python:3.11-slim
+# ------------------------------------------------------------
+# 🧱 Stage 1: Build Tailwind CSS
+# ------------------------------------------------------------
+FROM node:22-alpine AS frontend
 
-# Create working dir
 WORKDIR /app
 
-# Install system deps (curl useful for debugging)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
- && rm -rf /var/lib/apt/lists/*
+COPY package*.json ./
+RUN npm install
 
-# Copy requirements and install
+COPY tailwind.config.js postcss.config.js ./
+COPY suborbit/templates ./suborbit/templates
+COPY suborbit/static/src ./suborbit/static/src
+
+RUN npx tailwindcss -i ./suborbit/static/src/input.css -o ./suborbit/static/css/tailwind.css --minify
+
+
+# ------------------------------------------------------------
+# 🐍 Stage 2: Build Python backend
+# ------------------------------------------------------------
+FROM python:3.12-slim AS backend
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    FLASK_ENV=production \
+    APP_HOME=/app
+
+WORKDIR $APP_HOME
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application source into container
-COPY src/ /app/
+# Copy the Python app
+COPY suborbit ./suborbit
 
-# Ensure /config exists for logs/cache/.env
-RUN mkdir -p /config
+# Copy compiled CSS from frontend stage
+COPY --from=frontend /app/suborbit/static/css ./suborbit/static/css
 
-# Expose web UI port
 EXPOSE 5000
-
-# Run Flask app (app.py defines app = Flask(...))
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "suborbit.app:app"]

@@ -1,0 +1,727 @@
+{% extends "base.html" %}
+
+{% block title %}SubOrbit{% endblock %}
+
+{% block content %}
+<!-- Sidebar / Filters -->
+<aside class="md:w-1/3 overflow-y-auto bg-white/10 backdrop-blur p-2 rounded-xl shadow-lg space-23">
+    <h2 class="text-xl font-semibold mb-2">Filters</h2>
+
+    <!-- Main form with filters -->
+    <form id="runForm" method="post" action="{{ url_for('core.start') }}" class="space-y-2">
+
+        <div class="relative">
+            <!-- Label row with info icon -->
+
+            <div class="relative mb-4">
+                <div class="flex items-center justify-between">
+                    <label class="block text-sm">Trakt Source (optional)</label>
+                    <button id="trakt-login-btn" type="button"
+                        class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs">
+                        🔑 Login with Trakt
+                    </button>
+
+                    <div id="trakt-login-popup"
+                        class="hidden absolute right-0 mt-2 w-80 bg-gray-800 text-gray-200 text-sm p-4 rounded-lg shadow-lg z-50">
+                        <p class="font-bold mb-2">Connect to Trakt</p>
+                        <p class="text-xs mb-3">Click below to authorize SubOrbit to access your private lists.</p>
+                        <button id="start-trakt-auth" type="button"
+                            class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs w-full">Start
+                            Authentication</button>
+                        <div id="trakt-auth-status" class="text-xs mt-2"></div>
+                    </div>
+
+                    <script>
+                        document.getElementById("trakt-login-btn").addEventListener("click", () => {
+                            document.getElementById("trakt-login-popup").classList.toggle("hidden");
+                        });
+
+                        document.getElementById("start-trakt-auth").addEventListener("click", async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            const statusDiv = document.getElementById("trakt-auth-status");
+                            statusDiv.innerHTML = "⏳ Requesting device code...";
+
+                            const res = await fetch("{{ url_for('trakt.trakt_device') }}");
+                            const data = await res.json();
+
+                            const url = `https://trakt.tv/activate?code=${data.user_code}`;
+                            statusDiv.innerHTML = `
+                    Go to <a href="${url}" target="_blank" class="text-blue-400 underline">trakt.tv/activate</a>
+                    and enter <b>${data.user_code}</b><br>⏳ Waiting for authorization...
+                `;
+
+                            // Poll backend for status updates
+                            const poll = setInterval(async () => {
+                                const r = await fetch("{{ url_for('trakt.trakt_status_route') }}");
+                                const s = await r.json();
+
+                                if (s.state === "done") {
+                                    clearInterval(poll);
+                                    statusDiv.innerHTML = "✅ Connected to Trakt!";
+                                    setTimeout(() => {
+                                        document.getElementById("trakt-login-popup").classList.add("hidden");
+                                        // Optional: reload page automatically to update state
+                                        location.reload();
+                                    }, 1500);
+                                } else if (s.state === "error") {
+                                    clearInterval(poll);
+                                    statusDiv.innerHTML = "❌ Authorization failed or timed out.";
+                                }
+                            }, 3000);
+                        });
+
+                    </script>
+
+                    <button id="trakt-btn" type="button"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs">
+                        + Trakt List
+                    </button>
+                </div>
+
+                <!-- Hidden inputs for the backend -->
+                <input type="hidden" name="trakt_user" id="trakt_user">
+                <input type="hidden" name="trakt_list" id="trakt_list">
+
+                <!-- Popup modal -->
+                <div id="trakt-popup"
+                    class="hidden absolute right-0 mt-2 w-72 bg-gray-800 text-gray-200 text-sm p-4 rounded-lg shadow-lg z-50">
+                    <p class="font-bold mb-2">Enter Trakt list details:</p>
+                    <label class="block mb-1 text-xs">Username:</label>
+                    <input id="trakt-user-input" type="text" placeholder="e.g. cooluser"
+                        class="w-full p-1 mb-2 rounded text-black">
+                    <label class="block mb-1 text-xs">List name:</label>
+                    <input id="trakt-list-input" type="text" placeholder="e.g. watchlist"
+                        class="w-full p-1 mb-3 rounded text-black">
+                    <div class="flex justify-end gap-2">
+                        <button id="trakt-cancel"
+                            class="bg-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-xs">Cancel</button>
+                        <button id="trakt-save"
+                            class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs">Save</button>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="flex items-center justify-between mb-1">
+                <label class="block text-sm">Genres (comma separated)</label>
+
+                <button id="genres-info-btn" type="button"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs">
+                    + Genres
+                </button>
+            </div>
+            <!-- Free text input -->
+            <input type="text" name="genres" placeholder="e.g. sci-fi, drama, !action"
+                class="persist w-full p-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
+
+            <p class="text-xs text-gray-400 mt-1">
+                Prefix with <code>!</code> to exclude (e.g. <code>!horror</code>).
+            </p>
+
+            <!-- Popup with dynamic genre list -->
+            <div id="genres-popup"
+                class="hidden absolute right-0 mt-2 w-64 bg-gray-800 text-gray-200 text-sm p-3 rounded-lg shadow-lg z-50">
+                <p class="font-bold mb-2">Available Genres (click to add / toggle exclude):</p>
+                <div id="genres-list" class="flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+
+
+        <div class="flex justify-between">
+            <label class="block p-2">Start Year</label>
+            <input type="number" name="start_year" value="{{ start_year }}" required
+                class="persist w-1/4 p-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
+            <label class="block p-2">End Year</label>
+            <input type="number" name="end_year" value="{{ end_year }}" required
+                class="persist w-1/4 p-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="flex">
+            <label class="w-3/4 p-2">Min TMDB Rating</label>
+            <input type="number" step="0.1" name="min_tmdb" value="{{ min_tmdb }}" required
+                class="persist w-1/4 p-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="flex">
+            <label class="w-3/4 p-2">Min IMDB Rating</label>
+            <input type="number" step="0.1" name="min_imdb" value="{{ min_imdb }}" required
+                class="persist w-1/4 p-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="flex">
+            <label class="w-3/4 p-2">Min RT Score</label>
+            <input type="number" name="min_rt" value="{{ min_rt }}" required
+                class="persist w-1/4 p-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="flex">
+            <label class="w-3/4 p-2">Min TMDB/IMDB Votes</label>
+            <input type="number" name="min_vote_count" value="{{ min_vote_count }}" required
+                class="persist w-1/4 p-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="flex">
+            <label class="w-3/4 p-2">Max Movies per Run</label>
+            <input type="number" name="max_movies" value="{{ max_movies }}" required
+                class="persist w-1/4 p-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="flex">
+            <label class="w-1/2 p-2">Subtitle Language</label>
+            <p id="langHint" class="w-1/4 text-xs text-red-500 opacity-0 transition-opacity duration-200">
+                Enter a valid 2-letter language code (e.g. en, fr, es)
+            </p>
+
+            <input id="subtitle_lang" name="subtitle_lang" type="text" maxlength="2"
+                class="persist w-1/4 rounded-lg p-2 text-gray-900 dark:text-gray-100 uppercase tracking-wider focus:border-blue-500 focus:ring-blue-500 transition"
+                placeholder="en" value="{{ subtitle_lang }}" />
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const langInput = document.getElementById("subtitle_lang");
+                const langHint = document.getElementById("langHint");
+                const storageKey = "persist_" + langInput.name;
+
+                const validLangs = [
+                    "en", "fr", "es", "de", "it", "pt", "ru", "zh", "ja", "ko",
+                    "sv", "fi", "no", "da", "pl", "nl", "tr", "ar", "he", "cs",
+                    "el", "th", "hu", "ro", "id", "uk"
+                ];
+
+                // ---------- Restore step ----------
+                const saved = localStorage.getItem(storageKey);
+                if (saved && saved.trim() !== "") {
+                    langInput.value = saved;
+                }
+                // Now backend default is visible if no saved value
+
+                // ---------- Validation ----------
+                function validate() {
+                    let val = langInput.value.replace(/[^a-zA-Z]/g, "").toLowerCase().slice(0, 2);
+                    langInput.value = val;
+
+                    const isValid = /^[a-z]{2}$/.test(val) && validLangs.includes(val);
+                    langInput.classList.toggle("border-green-500", isValid);
+                    langInput.classList.toggle("border-red-500", !isValid && val.length > 0);
+                    langHint.classList.toggle("opacity-100", !isValid && val.length > 0);
+                    langHint.classList.toggle("opacity-0", isValid || val.length === 0);
+
+                    // ---------- Persist valid changes ----------
+                    localStorage.setItem(storageKey, val);
+                }
+
+                // ---------- Events ----------
+                langInput.addEventListener("input", validate);
+                langInput.addEventListener("blur", () => {
+                    if (langInput.value.length === 1) {
+                        langInput.value = "";
+                        langHint.classList.add("opacity-100");
+                        localStorage.removeItem(storageKey);
+                    }
+                });
+
+                // Run initial validation after restore
+                validate();
+            });
+        </script>
+
+        <div class="flex justify-between">
+            <div class="flex w-1/3 items-center mx-2">
+                <input type="checkbox" name="randomize" value="1" {% if randomize %}checked{% endif %} id="randbox"
+                    class="persist mr-2 w-5 h-5 text-blue-600 rounded">
+                <label for="randbox">Randomize selection</label>
+            </div>
+            <div class="flex w-1/2 justify-end">
+                <button type="button" id="reset-filters"
+                    class="w-full bg-gray-600 hover:bg-gray-800 text-white font-semibold py-2 px-4 rounded-lg transition">
+                    Reset Filters
+                </button>
+            </div>
+        </div>
+    </form>
+</aside>
+
+<!-- Main Content -->
+<section class="flex-1 flex flex-col md:overflow-hidden overflow-y-auto gap-2">
+
+    <section class="my-2">
+
+        <div class="flex items-center justify-between mb-2">
+            <h2 class="text-lg font-semibold">Recently Added</h2>
+            <div class="flex items-center gap-4 text-sm">
+                <button id="refresh-posters" class="text-blue-400 hover:text-blue-300 transition">
+                    ⟳ Refresh
+                </button>
+                <button id="toggle-layout" class="text-blue-400 hover:text-blue-300 transition">
+                    🖼 Grid
+                </button>
+            </div>
+            <div id="poster-carousel" class="flex space-x-4 overflow-x-auto pb-2"></div>
+    </section>
+
+    <script>
+        let layout = localStorage.getItem("layout") || "grid"; // "grid" or "cards"
+
+        function setLayoutButton() {
+            const btn = document.getElementById("toggle-layout");
+            btn.textContent = layout === "grid" ? "🖼 Grid" : "🎞 Cards";
+        }
+
+        async function loadRecent() {
+            const div = document.getElementById("poster-carousel");
+            div.innerHTML = "<p class='text-gray-400 text-sm'>Loading...</p>";
+
+            try {
+                const res = await fetch("{{ url_for('radarr.recent') }}");
+                const data = await res.json();
+                div.innerHTML = "";
+
+                if (data.error) {
+                    div.innerHTML = `<p class="text-sm text-red-400">${data.error}</p>`;
+                    return;
+                }
+
+                if (layout === "grid") {
+                    div.className = "flex flex-wrap justify-center gap-4 pb-2";
+                } else {
+                    div.className = "flex flex-col gap-3 pb-2";
+                }
+
+                for (const m of data) {
+                    if (!m.poster) continue;
+                    const year = m.year ? ` (${m.year})` : "";
+                    const rating = m.rating ? `⭐ ${m.rating.toFixed(1)}` : "";
+
+                    if (layout === "grid") {
+                        // Vertical poster grid
+                        const link = document.createElement("a");
+                        link.href = m.tmdb || m.radarr || m.imdb || "#";
+                        link.target = "_blank";
+                        link.rel = "noopener noreferrer";
+                        link.className = "relative group h-48 w-32 flex-shrink-0 cursor-pointer";
+                        link.innerHTML = `
+          <img src="${m.poster}" alt="${m.title}"
+               class="h-48 w-32 object-cover rounded-lg shadow-md group-hover:opacity-30 transition">
+          <div class="absolute inset-0 bg-gray-900 bg-opacity-90 text-gray-100 text-xs p-2
+                      opacity-0 group-hover:opacity-100 transition flex flex-col justify-end rounded-lg">
+            <p class="font-semibold text-sm truncate">${m.title}${year}</p>
+            <p class="text-yellow-400 text-xs">${rating}</p>
+          </div>`;
+                        div.appendChild(link);
+                    } else {
+                        // Horizontal card layout
+                        const link = document.createElement("a");
+                        link.href = m.tmdb || m.radarr || m.imdb || "#";
+                        link.target = "_blank";
+                        link.rel = "noopener noreferrer";
+                        link.className = "flex items-center bg-gray-800 hover:bg-gray-700 rounded-lg shadow-md overflow-hidden transition";
+                        link.innerHTML = `
+          <img src="${m.poster}" alt="${m.title}"
+               class="w-20 h-28 object-cover flex-shrink-0">
+          <div class="p-3 text-gray-100 flex flex-col justify-center text-sm">
+            <p class="font-semibold">${m.title}${year}</p>
+            <p class="text-yellow-400">${rating}</p>
+          </div>`;
+                        div.appendChild(link);
+                    }
+                }
+            } catch (e) {
+                console.error("Radarr fetch failed:", e);
+            }
+        }
+
+        document.getElementById("refresh-posters").addEventListener("click", async () => {
+            await fetch("{{ url_for('radarr.refresh_cache') }}", { method: "POST" });
+            loadRecent();
+        });
+
+        document.getElementById("toggle-layout").addEventListener("click", () => {
+            layout = layout === "grid" ? "cards" : "grid";
+            localStorage.setItem("layout", layout);
+            setLayoutButton();
+            loadRecent();
+        });
+
+        setLayoutButton();
+        loadRecent();
+    </script>
+
+    <!-- Header Row: Status + Start/Stop -->
+    <div class="bg-white/10 p-2 rounded-lg shadow flex flex-row items-center justify-between gap-4">
+
+        <!-- Status -->
+        <h2 class="text-lg font-bold">
+            Status:
+            <span id="status-text" class="font-mono {% if running %}text-green-400{% else %}text-gray-400{% endif %}">
+                {% if running %}Running...{% else %}Idle{% endif %}
+            </span>
+        </h2>
+
+        <!-- Buttons -->
+        <div class="flex gap-3">
+            <!-- Start button triggers sidebar form -->
+            <button id="start-btn" type="button"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold p-2 rounded-lg transition">
+                Start
+            </button>
+
+            <!-- Stop form -->
+            <form id="stop-form" method="post" action="{{ url_for('core.stop') }}" {% if not running
+                %}style="display:none" {% endif %}>
+                <button type="submit"
+                    class="bg-red-600 hover:bg-red-700 text-white font-semibold p-2 rounded-lg transition">
+                    Stop
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results (future movies list) -->
+    {% if movies %}
+    <div class="bg-white/10 p-2 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-2">Movies</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for movie in movies %}
+            <div class="bg-white/20 p-3 rounded-lg">
+                <p class="font-bold">{{ movie.title }}</p>
+                <p class="text-sm text-gray-300">Rating: {{ movie.rating }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Logs -->
+    <div class="flex-1 flex flex-col overflow-hidden bg-white/10 p-2 rounded-lg shadow">
+        <div class="flex flex-row items-center justify-between gap-4">
+            <h3 class="flex text-lg font-semibold mb-2">Logs</h3>
+            <div class="flex items-center gap-2 mb-2">
+                <input type="checkbox" id="autoscroll" checked class="w-4 h-4">
+                <label for="autoscroll" class="text-sm">Auto-scroll logs</label>
+            </div>
+        </div>
+        <div id="log" class="flex-1 overflow-y-auto bg-black text-green-400 p-3 rounded-lg font-mono text-sm"></div>
+    </div>
+
+</section>
+
+<script>
+    // Colorize log lines based on prefix       
+    function colorizeLogs(lines) {
+        return lines.map(line => {
+            if (line.startsWith("❌")) {
+                return `<span class="text-red-400">${line}</span>`;
+            }
+            if (line.startsWith("✅")) {
+                return `<span class="text-green-400">${line}</span>`;
+            }
+            if (line.startsWith("📀")) {
+                return `<span class="text-yellow-400">${line}</span>`;
+            }
+            if (line.startsWith("🎬")) {
+                return `<span class="text-blue-400">${line}</span>`;
+            }
+            return line; // fallback, no coloring
+        }).join("<br>");
+    }
+
+    // Restore saved state on load
+    window.addEventListener("DOMContentLoaded", () => {
+        const checkbox = document.getElementById("autoscroll");
+        const saved = localStorage.getItem("autoscroll");
+        if (saved !== null) {
+            checkbox.checked = (saved === "true");
+        }
+
+        // Save state when toggled
+        checkbox.addEventListener("change", () => {
+            localStorage.setItem("autoscroll", checkbox.checked);
+        });
+    });
+
+    // Validate form before submitting
+    document.getElementById("runForm").addEventListener("submit", function (e) {
+        const start = parseInt(this.start_year.value);
+        const end = parseInt(this.end_year.value);
+        if (start > end) {
+            alert("Start year cannot be greater than end year.");
+            e.preventDefault();
+        }
+    });
+
+    // Hook Start button to sidebar form
+    document.getElementById("start-btn").addEventListener("click", function () {
+        document.getElementById("runForm").submit();
+    });
+
+    function fetchLogs() {
+        fetch("{{ url_for('core.logs') }}")
+            .then(r => r.json())
+            .then(lines => {
+                const logDiv = document.getElementById("log");
+                logDiv.innerHTML = colorizeLogs(lines);
+
+                // Only auto-scroll if checkbox is checked
+                if (document.getElementById("autoscroll").checked) {
+                    logDiv.scrollTop = logDiv.scrollHeight;
+                }
+            });
+    }
+
+    // Restore values
+    document.querySelectorAll(".persist").forEach(el => {
+        const saved = localStorage.getItem("persist_" + el.name);
+        if (saved !== null) {
+            if (el.type === "checkbox") {
+                el.checked = (saved === "true");
+            } else {
+                el.value = saved;
+            }
+        }
+
+        // Save values on change
+        el.addEventListener("change", () => {
+            if (el.type === "checkbox") {
+                localStorage.setItem("persist_" + el.name, el.checked);
+            } else {
+                localStorage.setItem("persist_" + el.name, el.value);
+            }
+        });
+    });
+
+    // Restore autoscroll (already added earlier)
+    const autoscroll = document.getElementById("autoscroll");
+    const savedScroll = localStorage.getItem("autoscroll");
+    if (savedScroll !== null) {
+        autoscroll.checked = (savedScroll === "true");
+    }
+    autoscroll.addEventListener("change", () => {
+        localStorage.setItem("autoscroll", autoscroll.checked);
+    });
+
+    // Poll status
+    function updateStatus() {
+        fetch("{{ url_for('core.status') }}")
+            .then(r => r.json())
+            .then(data => {
+                const statusSpan = document.getElementById("status-text");
+                const startBtn = document.getElementById("start-btn");
+                const stopForm = document.getElementById("stop-form");
+
+                if (data.running) {
+                    statusSpan.textContent = "Running...";
+                    statusSpan.className = "font-mono text-green-400";
+
+                    startBtn.disabled = true;
+                    startBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+                    stopForm.style.display = "inline";
+                } else {
+                    statusSpan.textContent = "Idle";
+                    statusSpan.className = "font-mono text-gray-400";
+
+                    startBtn.disabled = false;
+                    startBtn.classList.remove("opacity-50", "cursor-not-allowed");
+
+                    stopForm.style.display = "none";
+                }
+            });
+    }
+    setInterval(updateStatus, 2000);
+    updateStatus();
+    setInterval(fetchLogs, 2000);
+    fetchLogs();
+
+    // Reset filters button
+    document.getElementById("reset-filters").addEventListener("click", () => {
+        // Clear each persistent input
+        document.querySelectorAll(".persist").forEach(el => {
+            if (el.type === "checkbox") {
+                el.checked = false;
+            } else {
+                el.value = "";
+            }
+            localStorage.removeItem("persist_" + el.name);
+        });
+        // Reload page so defaults from backend are shown
+        location.reload();
+    });
+
+
+    fetch("{{ url_for('core.genres') }}")
+        .then(r => r.json())
+        .then(genres => {
+            genres.forEach(g => {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.textContent = g;
+                btn.className = "px-2 py-1 rounded bg-gray-700 hover:bg-blue-600 mr-2 mb-2 text-xs";
+                btn.addEventListener("click", () => insertGenre(g));
+                list.appendChild(btn);
+            });
+        });
+
+    // === GENRE PICKER ===
+
+    // Handle insert/toggle/remove
+    function insertGenre(genre) {
+        const input = document.querySelector("input[name='genres']");
+        let current = input.value.split(",").map(s => s.trim()).filter(Boolean);
+
+        const idx = current.findIndex(g => g.toLowerCase() === genre.toLowerCase());
+        const exIdx = current.findIndex(g => g.toLowerCase() === ("!" + genre.toLowerCase()));
+
+        if (idx >= 0) {
+            // include → exclude
+            current[idx] = "!" + genre;
+        } else if (exIdx >= 0) {
+            // exclude → remove
+            current.splice(exIdx, 1);
+        } else {
+            // add new include
+            current.push(genre);
+        }
+
+        // Update field + persist immediately
+        input.value = current.join(", ");
+        localStorage.setItem("persist_genres", input.value);
+
+        updateChipColors();
+    }
+
+    // Update chip color states based on input contents
+    function updateChipColors() {
+        const input = document.querySelector("input[name='genres']");
+        const current = input.value.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+
+        document.querySelectorAll("#genres-list button").forEach(btn => {
+            const g = btn.textContent.toLowerCase();
+            if (current.includes(g)) {
+                btn.className = "px-2 py-1 rounded bg-blue-600 text-white text-xs";
+            } else if (current.includes("!" + g)) {
+                btn.className = "px-2 py-1 rounded bg-red-600 text-white text-xs";
+            } else {
+                btn.className = "px-2 py-1 rounded bg-gray-700 hover:bg-blue-600 text-xs";
+            }
+        });
+    }
+
+    // Open popup and fetch genres (only once)
+    document.getElementById("genres-info-btn").addEventListener("click", () => {
+        const popup = document.getElementById("genres-popup");
+        const list = document.getElementById("genres-list");
+
+        if (!list.hasChildNodes()) {
+            fetch("{{ url_for('core.genres') }}")
+                .then(r => r.json())
+                .then(genres => {
+                    genres.forEach(g => {
+                        const btn = document.createElement("button");
+                        btn.type = "button";
+                        btn.textContent = g;
+                        btn.className = "px-2 py-1 rounded bg-gray-700 hover:bg-blue-600 text-xs";
+                        btn.addEventListener("click", () => insertGenre(g));
+                        list.appendChild(btn);
+                    });
+                    updateChipColors(); // sync colors on first open
+                });
+        }
+
+        popup.classList.toggle("hidden");
+    });
+
+    // Close popup when clicking outside
+    document.addEventListener("click", (e) => {
+        const popup = document.getElementById("genres-popup");
+        const btn = document.getElementById("genres-info-btn");
+        if (!popup.contains(e.target) && !btn.contains(e.target)) {
+            popup.classList.add("hidden");
+        }
+    });
+
+    // === PERSISTENCE SUPPORT ===
+
+    // Restore persisted value into the genres input
+    window.addEventListener("DOMContentLoaded", () => {
+        const input = document.querySelector("input[name='genres']");
+        const saved = localStorage.getItem("persist_genres");
+        if (saved !== null) {
+            input.value = saved;
+        }
+
+        // Save to localStorage whenever user types
+        input.addEventListener("input", () => {
+            localStorage.setItem("persist_genres", input.value);
+            updateChipColors();
+        });
+    });
+
+
+
+    // Show popup
+    document.getElementById("trakt-btn").addEventListener("click", () => {
+        document.getElementById("trakt-popup").classList.toggle("hidden");
+    });
+
+    // Save
+    document.getElementById("trakt-save").addEventListener("click", () => {
+        const user = document.getElementById("trakt-user-input").value.trim();
+        const list = document.getElementById("trakt-list-input").value.trim();
+        if (!user || !list) {
+            alert("Please enter both user and list name.");
+            return;
+        }
+
+        // Save to hidden inputs (for form submit)
+        document.getElementById("trakt_user").value = user;
+        document.getElementById("trakt_list").value = list;
+
+        // Optional: store to localStorage
+        localStorage.setItem("persist_trakt_user", user);
+        localStorage.setItem("persist_trakt_list", list);
+
+        // Close popup
+        document.getElementById("trakt-popup").classList.add("hidden");
+    });
+
+    // Cancel
+    document.getElementById("trakt-cancel").addEventListener("click", () => {
+        document.getElementById("trakt-popup").classList.add("hidden");
+    });
+
+    async function checkTraktStatus() {
+        try {
+            const r = await fetch("{{ url_for('trakt.trakt_status_route') }}");
+            const data = await r.json();
+
+            const btn = document.getElementById("trakt-login-btn");
+
+            if (data.authenticated) {
+                btn.innerText = `✅ Connected to Trakt`;
+                btn.classList.remove("bg-red-600", "hover:bg-red-700");
+                btn.classList.add("bg-green-600", "cursor-default");
+                btn.disabled = true; // prevent reopening popup
+            } else {
+                btn.innerText = "🔑 Login with Trakt";
+                btn.classList.remove("bg-green-600", "cursor-default");
+                btn.classList.add("bg-red-600", "hover:bg-red-700");
+                btn.disabled = false;
+            }
+        } catch (err) {
+            console.error("Trakt status check failed:", err);
+        }
+    }
+
+    // Run at page load
+    checkTraktStatus();
+
+    // Optionally re-check every minute
+    setInterval(checkTraktStatus, 60000);
+
+
+</script>
+{% endblock %}

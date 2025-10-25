@@ -7,45 +7,10 @@ from typing import Dict, Any, List, Tuple, Optional
 
 import requests
 
-from config import (
-    # API keys / URLs
-    TMDB_API_KEY,
-    OS_API_KEY,
-    OMDB_KEY,
-    TRAKT_CLIENT_ID,
-    TRAKT_CLIENT_SECRET,
-    RADARR_API,
-    RADARR_KEY,
-    # year range defaults
-    START_YEAR,
-    END_YEAR,
-    # rating thresholds + toggles
-    MIN_TMDB_RATING,
-    MIN_IMDB_RATING,
-    MIN_RT_SCORE,
-    USE_TMDB,
-    USE_IMDB,
-    USE_RT,
-    # Radarr options
-    QUALITY_PROFILE_ID,
-    ROOT_FOLDER,
-    SEARCH_FOR_MOVIE,
-    # script behavior
-    QUIET_MODE,
-    DEBUG,
-    OS_DELAY,
-    RANDOM_SELECTION,
-    MAX_MOVIES_PER_RUN,
-    # extra filters
-    MIN_VOTE_COUNT,
-    MAX_DISCOVER_PAGES,
-    ALLOWED_INCLUDE_GENRES,
-    ALLOWED_EXCLUDE_GENRES,
-    ALLOWED_LANGUAGES,
-    SUBTITLE_LANG,
-)
+from .config import Config
 
 
+# ----------------- Stop mechanism -----------------
 def check_stop():
     if STOP_EVENT.is_set():
         raise RuntimeError("Stop requested")
@@ -70,7 +35,7 @@ CSV_FILE = BASE_CONFIG / "suborbit.csv"
 
 # ----------------- Logging -----------------
 def log(msg: str) -> None:
-    if not QUIET_MODE:
+    if not Config.QUIET_MODE:
         print(msg, flush=True)
     try:
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -133,9 +98,9 @@ def http_post(
 # ----------------- API: TMDB -----------------
 def tmdb_details(tmdb_id: int) -> Optional[dict]:
     url = f"https://api.themoviedb.org/3/movie/{tmdb_id}"
-    resp = http_get(url, params={"api_key": TMDB_API_KEY, "language": "en-US"})
+    resp = http_get(url, params={"api_key": Config.TMDB_API_KEY, "language": "en-US"})
     if not resp or resp.status_code != 200:
-        if DEBUG:
+        if Config.DEBUG:
             log(f"[TMDB] details {tmdb_id} status={getattr(resp, 'status_code', None)}")
         return None
     return resp.json()
@@ -144,14 +109,14 @@ def tmdb_details(tmdb_id: int) -> Optional[dict]:
 def tmdb_discover(year: int, page: int = 1) -> List[dict]:
     url = "https://api.themoviedb.org/3/discover/movie"
     params = {
-        "api_key": TMDB_API_KEY,
+        "api_key": Config.TMDB_API_KEY,
         "primary_release_year": year,
         "sort_by": "popularity.desc",
         "page": page,
     }
     resp = http_get(url, params=params)
     if not resp or resp.status_code != 200:
-        if DEBUG:
+        if Config.DEBUG:
             log(
                 f"[TMDB] discover {year} p{page} status={getattr(resp, 'status_code', None)}"
             )
@@ -164,14 +129,14 @@ def omdb_ratings(imdb_id: str) -> Tuple[Optional[float], Optional[int], Optional
     """
     Returns: (imdb_rating, imdb_votes, rt_score)
     """
-    if not (imdb_id and OMDB_KEY):
+    if not (imdb_id and Config.OMDB_KEY):
         return None, None, None
     resp = http_get(
         "http://www.omdbapi.com/",
-        params={"i": imdb_id, "apikey": OMDB_KEY},
+        params={"i": imdb_id, "apikey": Config.OMDB_KEY},
     )
     if not resp or resp.status_code != 200:
-        if DEBUG:
+        if Config.DEBUG:
             log(f"[OMDb] status={getattr(resp, 'status_code', None)} imdb={imdb_id}")
         return None, None, None
     data = resp.json()
@@ -196,7 +161,7 @@ def has_subs(subtitle_lang: str, imdb_id: int) -> bool:
     """
     Check OpenSubtitles for subtitles that are not AI/machine translated.
     """
-    headers = {"Api-Key": OS_API_KEY, "User-Agent": "SubOrbit/1.0"}
+    headers = {"Api-Key": Config.OS_API_KEY, "User-Agent": "SubOrbit/1.0"}
     params = {
         "languages": subtitle_lang,
         "imdb_id": imdb_id,
@@ -208,18 +173,18 @@ def has_subs(subtitle_lang: str, imdb_id: int) -> bool:
         "https://api.opensubtitles.com/api/v1/subtitles", params=params, headers=headers
     )
     if not resp or resp.status_code != 200:
-        if DEBUG:
+        if Config.DEBUG:
             log(f"[OS] imdb_id={imdb_id} status={getattr(resp, 'status_code', None)}")
         return False
     data = resp.json()
-    time.sleep(OS_DELAY)  # be gentle to OS API
+    time.sleep(Config.OS_DELAY)  # be gentle to OS API
     return len(data.get("data", [])) > 0
 
 
 # ----------------- API: Radarr -----------------
 def radarr_exists(tmdb_id: int) -> bool:
-    url = f"{RADARR_API}/movie"
-    headers = {"X-Api-Key": RADARR_KEY}
+    url = f"{Config.RADARR_API}/movie"
+    headers = {"X-Api-Key": Config.RADARR_KEY}
     resp = http_get(url, params={"tmdbId": tmdb_id}, headers=headers)
     if not resp or resp.status_code != 200:
         return False
@@ -230,18 +195,18 @@ def radarr_exists(tmdb_id: int) -> bool:
 
 
 def radarr_add(
-    tmdb_id: int, title: str, root_folder: str = ROOT_FOLDER
+    tmdb_id: int, title: str, root_folder: str = Config.ROOT_FOLDER
 ) -> Tuple[bool, str]:
-    url = f"{RADARR_API}/movie"
-    headers = {"X-Api-Key": RADARR_KEY}
+    url = f"{Config.RADARR_API}/movie"
+    headers = {"X-Api-Key": Config.RADARR_KEY}
     payload = {
         "tmdbId": tmdb_id,
-        "qualityProfileId": QUALITY_PROFILE_ID,
+        "qualityProfileId": Config.QUALITY_PROFILE_ID,
         "title": title,
         "titleSlug": str(tmdb_id),
         "rootFolderPath": root_folder,
         "monitored": True,
-        "addOptions": {"searchForMovie": bool(SEARCH_FOR_MOVIE)},
+        "addOptions": {"searchForMovie": bool(Config.SEARCH_FOR_MOVIE)},
     }
     resp = http_post(url, json_body=payload, headers=headers)
     if not resp:
@@ -336,9 +301,9 @@ def enrich_movie_basic(tmdb_obj: dict) -> Optional[dict]:
 
 
 def get_tmdb_genres():
-    if not TMDB_API_KEY:
+    if not Config.TMDB_API_KEY:
         return []
-    url = f"https://api.themoviedb.org/3/genre/movie/list?api_key={TMDB_API_KEY}&language=en-US"
+    url = f"https://api.themoviedb.org/3/genre/movie/list?api_key={Config.TMDB_API_KEY}&language=en-US"
     try:
         r = requests.get(url, timeout=10)
         r.raise_for_status()
@@ -363,7 +328,9 @@ def enrich_with_imdb_rt(movie: dict, cache: Dict[str, Any]) -> dict:
         movie["imdb_rating"] = omdb.get("imdb_rating")
         movie["rt_score"] = omdb.get("rt_score")
         # allow cached imdb_votes to override low tmdb vote_count
-        if omdb.get("imdb_votes") and (movie.get("vote_count", 0) < MIN_VOTE_COUNT):
+        if omdb.get("imdb_votes") and (
+            movie.get("vote_count", 0) < Config.MIN_VOTE_COUNT
+        ):
             movie["vote_count"] = omdb["imdb_votes"]
         return movie
 
@@ -416,21 +383,21 @@ def fails_filters(
 
     # Votes filter
     vote_count = int(movie.get("vote_count", 0) or 0)
-    if vote_count < MIN_VOTE_COUNT:
-        return f"too few votes ({vote_count} < {MIN_VOTE_COUNT})"
+    if vote_count < Config.MIN_VOTE_COUNT:
+        return f"too few votes ({vote_count} < {Config.MIN_VOTE_COUNT})"
 
     # Rating filters
-    if USE_TMDB:
+    if Config.USE_TMDB:
         tmdb_rating = float(movie.get("tmdb_rating") or 0)
         if tmdb_rating < min_tmdb:
             return f"low TMDB ({tmdb_rating} < {min_tmdb})"
 
-    if USE_IMDB:
+    if Config.USE_IMDB:
         imdb_rating = float(movie.get("imdb_rating") or 0)
         if imdb_rating < min_imdb:
             return f"low IMDB ({imdb_rating} < {min_imdb})"
 
-    if USE_RT:
+    if Config.USE_RT:
         rt_score = int(movie.get("rt_score") or 0)
         if rt_score < min_rt:
             return f"low RT ({rt_score} < {min_rt})"
@@ -498,8 +465,8 @@ def get_trakt_token():
     url = "https://api.trakt.tv/oauth/token"
     payload = {
         "refresh_token": refresh_token,
-        "client_id": TRAKT_CLIENT_ID,
-        "client_secret": TRAKT_CLIENT_SECRET,
+        "client_id": Config.TRAKT_CLIENT_ID,
+        "client_secret": Config.TRAKT_CLIENT_SECRET,
         "grant_type": "refresh_token",
     }
     headers = {"Content-Type": "application/json"}
@@ -535,7 +502,7 @@ def fetch_trakt_list(user: str, list_name: str):
     headers = {
         "Content-Type": "application/json",
         "trakt-api-version": "2",
-        "trakt-api-key": TRAKT_CLIENT_ID,
+        "trakt-api-key": Config.TRAKT_CLIENT_ID,
         "User-Agent": "suborbit",
     }
     if token:
@@ -586,29 +553,24 @@ def reset_stop():
 
 # ----------------- Orchestration -----------------
 def main_process(
-    start_year: int = START_YEAR,
-    end_year: int = END_YEAR,
+    start_year: int = Config.START_YEAR,
+    end_year: int = Config.END_YEAR,
     include_genres: Optional[list[str]] = None,
     exclude_genres: Optional[list[str]] = None,
-    min_tmdb: float = MIN_TMDB_RATING,
-    min_imdb: float = MIN_IMDB_RATING,
-    min_rt: int = MIN_RT_SCORE,
-    max_movies: int = MAX_MOVIES_PER_RUN,
-    randomize: bool = RANDOM_SELECTION,
-    max_pages: int = MAX_DISCOVER_PAGES,
-    min_vote_count: int = MIN_VOTE_COUNT,
-    subtitle_lang: str = SUBTITLE_LANG,
+    min_tmdb: float = Config.MIN_TMDB_RATING,
+    min_imdb: float = Config.MIN_IMDB_RATING,
+    min_rt: int = Config.MIN_RT_SCORE,
+    max_movies: int = Config.MAX_MOVIES_PER_RUN,
+    randomize: bool = Config.RANDOM_SELECTION,
+    max_pages: int = Config.MAX_DISCOVER_PAGES,
+    min_vote_count: int = Config.MIN_VOTE_COUNT,
+    subtitle_lang: str = Config.SUBTITLE_LANG,
     trakt_user=None,
     trakt_list=None,
 ) -> None:
     """
     Runs the whole pipeline with current config and parameters.
     """
-    # Allow overrides for thresholds (without changing globals)
-    global MIN_TMDB_RATING, MIN_IMDB_RATING, MIN_RT_SCORE
-    MIN_TMDB_RATING = min_tmdb
-    MIN_IMDB_RATING = min_imdb
-    MIN_RT_SCORE = min_rt
 
     # Make sure we start clean
     reset_stop()
@@ -623,9 +585,9 @@ def main_process(
 
         log(f"=== Starting SubOrbit run ===")
         log(f"Years: {start_year}–{end_year}")
-        tmdb_min = str(min_tmdb) if USE_TMDB else f"({min_tmdb})"
-        imdb_min = str(min_imdb) if USE_IMDB else f"({min_imdb})"
-        rt_min = str(min_rt) if USE_RT else f"({min_rt})"
+        tmdb_min = str(min_tmdb) if Config.USE_TMDB else f"({min_tmdb})"
+        imdb_min = str(min_imdb) if Config.USE_IMDB else f"({min_imdb})"
+        rt_min = str(min_rt) if Config.USE_RT else f"({min_rt})"
         log(f"Min ratings: TMDB {tmdb_min}, IMDB {imdb_min}, RT {rt_min}")
         log(f"Max movies: {max_movies}")
         log(f"Randomize: {randomize}")
@@ -664,7 +626,7 @@ def main_process(
             else:
                 log(f"-- Discovering TMDB movies for {year} ...")
                 candidates = discover_candidates_for_year(
-                    year, pages=MAX_DISCOVER_PAGES
+                    year, pages=Config.MAX_DISCOVER_PAGES
                 )
                 if randomize:
                     import random
@@ -709,21 +671,21 @@ def main_process(
                     exclude_genres=exclude_genres,
                 )
                 if reason:
-                    if DEBUG:
+                    if Config.DEBUG:
                         log(f"❌ {reason}: {item.get('title','<no title>')}")
                     continue
 
                 # Require subtitles (non-AI) before any rating fetch
                 if not has_subs(subtitle_lang, imdb_id):
-                    if DEBUG:
+                    if Config.DEBUG:
                         log(f"❌ no {subtitle_lang} subs: {basic['title']}")
                     continue
 
-                if DEBUG:
+                if Config.DEBUG:
                     log(f"✅ passed all filters: {item.get('title','<no title>')}")
 
                 # Add to Radarr
-                ok, msg = radarr_add(tmdb_id, basic["title"], ROOT_FOLDER)
+                ok, msg = radarr_add(tmdb_id, basic["title"], Config.ROOT_FOLDER)
                 if ok:
                     total_added += 1
                     log(

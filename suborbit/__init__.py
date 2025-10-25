@@ -1,0 +1,19 @@
+from flask import Flask
+from .config import Config
+
+# Import blueprints
+from .blueprints.core import core_bp
+from .blueprints.trakt import trakt_bp
+from .blueprints.radarr import radarr_bp
+
+
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
+
+    # Register all blueprints
+    app.register_blueprint(core_bp)
+    app.register_blueprint(trakt_bp)
+    app.register_blueprint(radarr_bp)
+
+    return app
