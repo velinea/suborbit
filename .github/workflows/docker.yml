@@ -34,6 +34,9 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}
+            BUILD_DATE=${{ github.run_started_at }}
           cache-to: type=gha,mode=max
           tags: |
             ghcr.io/${{ github.repository }}:latest

@@ -9,7 +9,8 @@
     <link rel="icon" href="{{ url_for('static', filename='octopus_logo.png') }}">
 </head>
 
-<body class="flex flex-col min-h-[100vh] md:h-screen md:overflow-hidden overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-gray-100">
+<body
+    class="flex flex-col min-h-[100vh] md:h-screen md:overflow-hidden overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-gray-100">
 
     <!-- Navbar -->
     <header class="flex items-center p-2 bg-black/30">
@@ -20,8 +21,75 @@
     <main class="flex flex-col md:flex-row flex-1 md:overflow-hidden overflow-y-auto gap-2 p-2">
         {% block content %}{% endblock %}
     </main>
-    <footer class="p-4 text-center text-xs text-gray-400">
-        &copy; 2025 SubOrbit <a href="https://github.com/velinea/suborbit" class="underline text-blue-400" target="_blank">GitHub</a>   
+    <footer class="text-xs text-gray-400 text-center mt-6">
+        <span id="app-version">&copy; SubOrbit <a href="https://github.com/velinea/suborbit"
+                class="underline text-blue-400" target="_blank">GitHub</a></span>
+
+        <script>
+            fetch("/version")
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById("app-version").textContent =
+                        `SubOrbit ${data.version}`;
+                })
+                .catch(() => {
+                    document.getElementById("app-version").textContent = "SubOrbit (dev)";
+                });
+        </script>
+        <footer class="text-xs text-gray-400 text-center mt-6">
+            <span id="app-version" class="cursor-pointer hover:text-gray-200 transition">
+                SubOrbit
+            </span>
+        </footer>
+
+        <!-- About modal -->
+        <div id="about-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+            <div class="bg-gray-800 text-gray-100 rounded-lg shadow-lg p-6 w-80 relative">
+                <button id="about-close" class="absolute top-2 right-2 text-gray-400 hover:text-gray-100">✕</button>
+                <h2 class="text-lg font-semibold mb-2">About SubOrbit</h2>
+                <p class="text-sm mb-1"><strong>Version:</strong> <span id="about-version">-</span></p>
+                <p class="text-sm mb-1"><strong>Build Date:</strong> <span id="about-build">-</span></p>
+                <p class="text-sm mb-3"><strong>Repo:</strong> <a id="about-repo" href="#"
+                        class="text-blue-400 hover:underline" target="_blank">GitHub</a></p>
+                <p class="text-xs text-gray-400" id="about-desc"></p>
+            </div>
+        </div>
+
+        <script>
+            async function loadAbout() {
+                try {
+                    const res = await fetch("/about");
+                    const info = await res.json();
+                    document.getElementById("about-version").textContent = info.version;
+                    document.getElementById("about-build").textContent = info.build_date;
+                    document.getElementById("about-repo").href = info.repo;
+                    document.getElementById("about-desc").textContent = info.description;
+                    document.getElementById("app-version").textContent = `SubOrbit ${info.version}`;
+                } catch {
+                    document.getElementById("app-version").textContent = "SubOrbit (dev)";
+                }
+            }
+
+            // Modal toggle
+            document.getElementById("app-version").addEventListener("click", () => {
+                document.getElementById("about-modal").classList.remove("hidden");
+                document.getElementById("about-modal").classList.add("flex");
+            });
+
+            document.getElementById("about-close").addEventListener("click", () => {
+                document.getElementById("about-modal").classList.add("hidden");
+            });
+
+            window.addEventListener("click", (e) => {
+                if (e.target.id === "about-modal") {
+                    document.getElementById("about-modal").classList.add("hidden");
+                }
+            });
+
+            loadAbout();
+        </script>
+
     </footer>
 </body>
+
 </html>

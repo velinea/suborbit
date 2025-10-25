@@ -7,9 +7,10 @@ from flask import (
     jsonify,
     current_app,
 )
-import threading, time, json
+import threading, time, json, os
 from pathlib import Path
 from ..suborbit_core import main_process, log, LOG_PATH, request_stop, get_tmdb_genres
+from datetime import datetime
 
 core_bp = Blueprint("core", __name__)
 
@@ -110,3 +111,27 @@ def logs():
 def healthz():
     """Basic health check for container monitors."""
     return {"status": "ok", "message": "SubOrbit is healthy"}, 200
+
+
+@core_bp.route("/version")
+def version():
+    """Return SubOrbit version for UI and health checks."""
+    app_version = os.getenv("APP_VERSION", "dev")
+    return {"version": app_version}, 200
+
+
+@core_bp.route("/about")
+def about():
+    """Return metadata about the SubOrbit app (for About modal)."""
+    version = os.getenv("APP_VERSION", "dev")
+    build_date = os.getenv("BUILD_DATE", "")
+    repo_url = "https://github.com/<user>/suborbit"
+
+    info = {
+        "name": "SubOrbit",
+        "version": version,
+        "build_date": build_date or datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+        "repo": repo_url,
+        "description": "Movie discovery app with subtitles, Radarr & Trakt integration.",
+    }
+    return info, 200
