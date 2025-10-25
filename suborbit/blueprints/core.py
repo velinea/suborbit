@@ -10,7 +10,7 @@ from flask import (
 import threading, time, json, os
 from pathlib import Path
 from ..suborbit_core import main_process, log, LOG_PATH, request_stop, get_tmdb_genres
-from datetime import datetime
+from datetime import datetime, timezone
 
 core_bp = Blueprint("core", __name__)
 
