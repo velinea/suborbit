@@ -4,27 +4,33 @@ from ..config import Config
 
 radarr_bp = Blueprint("radarr", __name__)
 
-# In-memory cache
 _cache = {"timestamp": 0, "data": None}
-_CACHE_TTL = 600  # seconds = 10 minutes
+_CACHE_TTL = 600  # seconds (10 minutes)
+
+
+def radarr_base_url():
+    """Return the Radarr UI root (strip trailing /api/* if present)."""
+    api_url = Config.RADARR_API.rstrip("/")
+    if "/api" in api_url:
+        api_url = api_url.rsplit("/api", 1)[0]
+    return api_url
 
 
 @radarr_bp.route("/api/radarr/recent")
 def recent():
     """Return recently added movies from Radarr (cached for 10 min)."""
     now = time.time()
-    # ✅ Use cache if valid
     if _cache["data"] and now - _cache["timestamp"] < _CACHE_TTL:
         return jsonify(_cache["data"])
 
-    api_key = Config.RADARR_KEY
-    base_url = Config.RADARR_API.rstrip("/")
+    api_url = Config.RADARR_API.rstrip("/")
+    api_key = Config.RADARR_KEY  # ✅ correct variable name
 
-    if not api_key or not base_url:
+    if not api_url or not api_key:
         return jsonify({"error": "Radarr not configured"}), 400
 
     try:
-        url = f"{base_url}/movie"
+        url = f"{api_url}/movie"
         headers = {"X-Api-Key": api_key}
         r = requests.get(url, headers=headers, timeout=10)
         r.raise_for_status()
@@ -32,20 +38,21 @@ def recent():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    # Sort & map results
     movies = sorted(movies, key=lambda m: m.get("added", ""), reverse=True)
+    base_ui = radarr_base_url()
 
     recent = []
     for m in movies[:10]:
+        # Poster image
         img = ""
         for i in m.get("images", []):
             if i.get("coverType") == "poster":
                 path = i.get("remoteUrl") or i.get("url")
                 if path:
-                    img = path if path.startswith("http") else f"{base_url}{path}"
+                    img = path if path.startswith("http") else f"{base_ui}{path}"
                     break
 
-        # Pick a rating (Radarr stores several, like IMDb or TMDb)
+        # Ratings
         rating = None
         ratings = m.get("ratings", {})
         if "imdb" in ratings and ratings["imdb"].get("value"):
@@ -53,14 +60,14 @@ def recent():
         elif "tmdb" in ratings and ratings["tmdb"].get("value"):
             rating = ratings["tmdb"]["value"]
 
-        # Build URLs
+        # URLs
         tmdb_id = m.get("tmdbId")
         imdb_id = m.get("imdbId")
         radarr_id = m.get("id")
 
         tmdb_url = f"https://www.themoviedb.org/movie/{tmdb_id}" if tmdb_id else None
         imdb_url = f"https://www.imdb.com/title/{imdb_id}" if imdb_id else None
-        radarr_url = f"{base_url}/movie/{radarr_id}" if radarr_id else None
+        radarr_url = f"{base_ui}/movie/{radarr_id}" if radarr_id else None
 
         recent.append(
             {
@@ -68,16 +75,15 @@ def recent():
                 "year": m.get("year"),
                 "rating": rating,
                 "poster": img,
+                "overview": m.get("overview", ""),
                 "tmdb": tmdb_url,
                 "imdb": imdb_url,
                 "radarr": radarr_url,
             }
         )
 
-    # ✅ Store in cache
     _cache["timestamp"] = now
     _cache["data"] = recent
-
     return jsonify(recent)
 
 
@@ -85,6 +91,5 @@ def recent():
 def refresh_cache():
     """Manually clear Radarr poster cache."""
     global _cache
-    _cache["data"] = None
-    _cache["timestamp"] = 0
+    _cache = {"timestamp": 0, "data": None}
     return jsonify({"status": "cleared"})

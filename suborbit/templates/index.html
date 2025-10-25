@@ -4,8 +4,8 @@
 
 {% block content %}
 <!-- Sidebar / Filters -->
-<aside class="md:w-1/3 overflow-y-auto bg-white/10 backdrop-blur p-2 rounded-xl shadow-lg space-23">
-    <h2 class="text-xl font-semibold mb-2">Filters</h2>
+<aside class="md:w-1/4 overflow-y-auto bg-white/10 backdrop-blur p-2 rounded-xl shadow-lg space-23">
+    <h2 class="text-lg font-semibold mb-2">Filters</h2>
 
     <!-- Main form with filters -->
     <form id="runForm" method="post" action="{{ url_for('core.start') }}" class="space-y-2">
@@ -249,28 +249,18 @@
 <section class="flex-1 flex flex-col md:overflow-hidden overflow-y-auto gap-2">
 
     <section class="my-2">
-
         <div class="flex items-center justify-between mb-2">
             <h2 class="text-lg font-semibold">Recently Added</h2>
-            <div class="flex items-center gap-4 text-sm">
-                <button id="refresh-posters" class="text-blue-400 hover:text-blue-300 transition">
-                    ⟳ Refresh
-                </button>
-                <button id="toggle-layout" class="text-blue-400 hover:text-blue-300 transition">
-                    🖼 Grid
-                </button>
-            </div>
-            <div id="poster-carousel" class="flex space-x-4 overflow-x-auto pb-2"></div>
+            <button id="refresh-posters" class="text-sm text-blue-400 hover:text-blue-300 transition">
+                ⟳ Refresh
+            </button>
+        </div>
+
+        <!-- Single-row horizontal carousel -->
+        <div id="poster-carousel" class="flex space-x-4 overflow-x-auto pb-2 snap-x snap-mandatory"></div>
     </section>
 
     <script>
-        let layout = localStorage.getItem("layout") || "grid"; // "grid" or "cards"
-
-        function setLayoutButton() {
-            const btn = document.getElementById("toggle-layout");
-            btn.textContent = layout === "grid" ? "🖼 Grid" : "🎞 Cards";
-        }
-
         async function loadRecent() {
             const div = document.getElementById("poster-carousel");
             div.innerHTML = "<p class='text-gray-400 text-sm'>Loading...</p>";
@@ -281,74 +271,67 @@
                 div.innerHTML = "";
 
                 if (data.error) {
-                    div.innerHTML = `<p class="text-sm text-red-400">${data.error}</p>`;
+                    div.innerHTML = `<p class='text-sm text-red-400'>${data.error}</p>`;
                     return;
-                }
-
-                if (layout === "grid") {
-                    div.className = "flex flex-wrap justify-center gap-4 pb-2";
-                } else {
-                    div.className = "flex flex-col gap-3 pb-2";
                 }
 
                 for (const m of data) {
                     if (!m.poster) continue;
-                    const year = m.year ? ` (${m.year})` : "";
-                    const rating = m.rating ? `⭐ ${m.rating.toFixed(1)}` : "";
 
-                    if (layout === "grid") {
-                        // Vertical poster grid
-                        const link = document.createElement("a");
-                        link.href = m.tmdb || m.radarr || m.imdb || "#";
-                        link.target = "_blank";
-                        link.rel = "noopener noreferrer";
-                        link.className = "relative group h-48 w-32 flex-shrink-0 cursor-pointer";
-                        link.innerHTML = `
-          <img src="${m.poster}" alt="${m.title}"
-               class="h-48 w-32 object-cover rounded-lg shadow-md group-hover:opacity-30 transition">
-          <div class="absolute inset-0 bg-gray-900 bg-opacity-90 text-gray-100 text-xs p-2
-                      opacity-0 group-hover:opacity-100 transition flex flex-col justify-end rounded-lg">
-            <p class="font-semibold text-sm truncate">${m.title}${year}</p>
-            <p class="text-yellow-400 text-xs">${rating}</p>
-          </div>`;
-                        div.appendChild(link);
-                    } else {
-                        // Horizontal card layout
-                        const link = document.createElement("a");
-                        link.href = m.tmdb || m.radarr || m.imdb || "#";
-                        link.target = "_blank";
-                        link.rel = "noopener noreferrer";
-                        link.className = "flex items-center bg-gray-800 hover:bg-gray-700 rounded-lg shadow-md overflow-hidden transition";
-                        link.innerHTML = `
-          <img src="${m.poster}" alt="${m.title}"
-               class="w-20 h-28 object-cover flex-shrink-0">
-          <div class="p-3 text-gray-100 flex flex-col justify-center text-sm">
-            <p class="font-semibold">${m.title}${year}</p>
-            <p class="text-yellow-400">${rating}</p>
-          </div>`;
-                        div.appendChild(link);
-                    }
+                    const year = m.year ? m.year : "—";
+                    const rating = m.rating ? `⭐ ${m.rating.toFixed(1)}` : "⭐ —";
+                    const overview = m.overview
+                        ? m.overview.replace(/"/g, "&quot;").substring(0, 300)
+                        : "No description available.";
+
+                    const card = document.createElement("a");
+                    card.href = m.tmdb || m.radarr || m.imdb || "#";
+                    card.target = "_blank";
+                    card.rel = "noopener noreferrer";
+                    card.className =
+                        "relative group h-64 w-44 flex-shrink-0 cursor-pointer snap-start";
+
+                    card.innerHTML = `
+        <!-- Poster -->
+        <img src="${m.poster}" alt="${m.title}"
+             class="h-64 w-44 object-cover rounded-lg shadow-md group-hover:opacity-40 transition">
+
+        <!-- Static info bar -->
+        <div class="absolute bottom-0 left-0 right-0 bg-gray-900/80 text-gray-100 text-xs p-2 rounded-b-lg">
+          <p class="font-semibold text-sm truncate">${m.title}</p>
+          <p class="text-yellow-400 text-xs mt-0.5">${year} &nbsp; ${rating}</p>
+        </div>
+
+        <!-- Hover overview overlay -->
+        <div class="absolute inset-0 bg-gray-900/95 text-gray-100 text-xs p-3 rounded-lg opacity-0
+                    group-hover:opacity-100 transition flex flex-col justify-end">
+          <div class="overflow-hidden text-ellipsis">
+            <p class="font-semibold text-sm mb-1 truncate">${m.title}</p>
+            <p class="text-yellow-400 text-xs mb-2">${year} &nbsp; ${rating}</p>
+            <p class="leading-snug line-clamp-6">${overview}</p>
+          </div>
+        </div>
+      `;
+
+                    div.appendChild(card);
                 }
             } catch (e) {
                 console.error("Radarr fetch failed:", e);
+                div.innerHTML = `<p class='text-red-400 text-sm'>Error loading posters.</p>`;
             }
         }
 
+        // Manual refresh
         document.getElementById("refresh-posters").addEventListener("click", async () => {
             await fetch("{{ url_for('radarr.refresh_cache') }}", { method: "POST" });
             loadRecent();
         });
 
-        document.getElementById("toggle-layout").addEventListener("click", () => {
-            layout = layout === "grid" ? "cards" : "grid";
-            localStorage.setItem("layout", layout);
-            setLayoutButton();
-            loadRecent();
-        });
-
-        setLayoutButton();
         loadRecent();
     </script>
+
+
+
 
     <!-- Header Row: Status + Start/Stop -->
     <div class="bg-white/10 p-2 rounded-lg shadow flex flex-row items-center justify-between gap-4">
