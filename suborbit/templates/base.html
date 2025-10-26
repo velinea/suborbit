@@ -7,6 +7,21 @@
     <title>{% block title %}SubOrbit{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='octopus_logo.png') }}">
+
+    <script>
+        window.SubOrbitConfig = {
+            urls: {
+                genres: "{{ url_for('core.genres') }}",
+                start: "{{ url_for('core.start') }}",
+                stop: "{{ url_for('core.stop') }}",
+                status: "{{ url_for('core.status') }}",
+                logs: "{{ url_for('core.logs') }}",
+                traktDevice: "{{ url_for('trakt.trakt_device') }}",
+                traktStatus: "{{ url_for('trakt.trakt_status_route') }}",
+                radarrRecent: "{{ url_for('radarr.recent') }}"
+            }
+        };
+    </script>
 </head>
 
 <body
@@ -21,7 +36,7 @@
     <main class="flex flex-col md:flex-row flex-1 md:overflow-hidden overflow-y-auto gap-2 p-2">
         {% block content %}{% endblock %}
     </main>
-    <footer class="text-xs text-gray-400 text-center mb-2">
+    <footer class="text-xs text-gray-400 text-center mb-4">
         <span id="app-version">&copy; SubOrbit</span>
 
         <script>
@@ -109,6 +124,14 @@
         </script>
 
     </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/genres.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/trakt.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/radarr.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/form.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/status.js') }}" defer></script>
+
 </body>
 
 </html>
