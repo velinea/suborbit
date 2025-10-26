@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   
   function updateStatus() {
-  fetch("/core/status")
+  fetch("/status")
     .then(r => r.json())
     .then(data => {
       updateStatusDisplay(data.running);
