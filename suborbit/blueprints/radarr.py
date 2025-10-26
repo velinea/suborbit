@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 import requests, time
 from ..config import Config
 
@@ -9,38 +9,59 @@ _cache = {"timestamp": 0, "data": None}
 _CACHE_TTL = 600  # seconds
 
 
+# ------------------------------------------------------------
+# URL helpers
+# ------------------------------------------------------------
+def get_radarr_api():
+    """
+    Return the correct Radarr API root based on client network.
+    Uses RADARR_API_LAN or RADARR_API_TAIL if defined, else RADARR_API.
+    """
+    client_ip = request.remote_addr or ""
+    tail_ip = client_ip.startswith("100.") or client_ip.startswith("fd7a:")
+
+    if tail_ip and getattr(Config, "RADARR_API_TAIL", None):
+        return Config.RADARR_API_TAIL.rstrip("/")
+    elif getattr(Config, "RADARR_API_LAN", None):
+        return Config.RADARR_API_LAN.rstrip("/")
+    else:
+        return Config.RADARR_API.rstrip("/")
+
+
 def radarr_base_url():
     """Return the Radarr UI root (strip trailing /api/* if present)."""
-    api_url = Config.RADARR_API.rstrip("/")
+    api_url = get_radarr_api()
     if "/api" in api_url:
         api_url = api_url.rsplit("/api", 1)[0]
     return api_url
 
 
+# ------------------------------------------------------------
+# Routes
+# ------------------------------------------------------------
 @radarr_bp.route("/api/radarr/status")
 def status():
     """Quick health check: verify Radarr connectivity and API key validity."""
-    api_url = Config.RADARR_API.rstrip("/")
+    api_url = get_radarr_api()
     api_key = Config.RADARR_KEY
+
     if not api_url or not api_key:
         return jsonify({"ok": False, "error": "Radarr not configured"}), 400
 
     try:
         url = f"{api_url}/system/status"
         headers = {"X-Api-Key": api_key}
-        r = requests.get(url, headers=headers, timeout=5)
+        r = requests.get(url, headers=headers, timeout=8)
         r.raise_for_status()
         data = r.json()
-
-        # Basic useful details
-        version = data.get("version")
-        name = data.get("appName", "Radarr")
-
         return jsonify(
-            {"ok": True, "name": name, "version": version, "url": radarr_base_url()}
+            {
+                "ok": True,
+                "name": data.get("appName", "Radarr"),
+                "version": data.get("version"),
+                "url": radarr_base_url(),
+            }
         )
-    except requests.exceptions.RequestException as e:
-        return jsonify({"ok": False, "error": f"Connection failed: {e}"}), 500
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -52,9 +73,8 @@ def recent():
     if _cache["data"] and now - _cache["timestamp"] < _CACHE_TTL:
         return jsonify(_cache["data"])
 
-    api_url = Config.RADARR_API.rstrip("/")
+    api_url = get_radarr_api()
     api_key = Config.RADARR_KEY
-
     if not api_url or not api_key:
         return jsonify({"error": "Radarr not configured"}), 400
 
@@ -72,7 +92,7 @@ def recent():
 
     recent = []
     for m in movies[:10]:
-        # Poster image
+        # Poster
         img = ""
         for i in m.get("images", []):
             if i.get("coverType") == "poster":
@@ -81,7 +101,7 @@ def recent():
                     img = path if path.startswith("http") else f"{base_ui}{path}"
                     break
 
-        # Rating preference
+        # Ratings
         rating = None
         ratings = m.get("ratings") or {}
         if "imdb" in ratings and ratings["imdb"].get("value"):
