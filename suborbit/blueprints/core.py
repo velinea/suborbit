@@ -118,22 +118,3 @@ def version():
     """Return SubOrbit version for UI and health checks."""
     app_version = os.getenv("APP_VERSION", "dev")
     return {"version": app_version}, 200
-
-
-@core_bp.route("/about")
-def about():
-    """Return metadata about the SubOrbit app (for About modal)."""
-    version = os.getenv("APP_VERSION", "dev")
-    build_date = os.getenv("BUILD_DATE", "")
-    repo_url = "https://github.com/velinea/suborbit"
-
-    info = {
-        "name": "SubOrbit",
-        "version": version,
-        "build_date": build_date
-        or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "repo": repo_url,
-        "description": "Movie discovery app with subtitles, Radarr & Trakt integration.",
-    }
-
-    return info, 200
