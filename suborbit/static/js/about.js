@@ -30,10 +30,25 @@ document.addEventListener("DOMContentLoaded", () => {
         </p>`;
       }).join("");
 
+      // Fade in status block smoothly
+      servicesEl.style.opacity = "0";
       servicesEl.innerHTML = `
-        <div class="mt-2">${statusHTML}</div>
-        <p class="text-xs text-gray-500 mt-2 italic">${info.summary}</p>
+        <div class="mt-2 transition-opacity duration-300 opacity-0" id="about-services-inner">
+          ${statusHTML}
+          <p class="text-xs text-gray-500 mt-2 italic">${info.summary}</p>
+        </div>
       `;
+
+      // Trigger reflow and fade in
+      requestAnimationFrame(() => {
+        const inner = document.getElementById("about-services-inner");
+        if (inner) {
+          inner.classList.remove("opacity-0");
+          inner.classList.add("opacity-100");
+          servicesEl.style.opacity = "1";
+        }
+      });
+
     } catch (err) {
       console.error("About info fetch failed:", err);
       servicesEl.innerHTML = `<p class="text-xs text-red-400">Error loading system info</p>`;

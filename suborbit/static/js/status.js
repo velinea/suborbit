@@ -65,6 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await r.json();
 
       if (data.running) {
+        const overlay = document.getElementById("loading-overlay");
+          if (overlay && !overlay.classList.contains("hidden")) {
+            overlay.classList.replace("opacity-100", "opacity-0");
+            setTimeout(() => overlay.classList.add("hidden"), 300);
+          }
+
         statusSpan.textContent = "Running...";
         statusSpan.className = "font-mono text-green-400";
 

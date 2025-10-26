@@ -102,4 +102,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   console.debug("[SubOrbit] form.js initialized");
+
+  // ----------------------------------------
+  // 6️⃣ Show loading overlay on start
+  // ---------------------------------------- 
+  document.getElementById("start-btn").addEventListener("click", () => {
+    const overlay = document.getElementById("loading-overlay");
+    overlay.classList.remove("hidden");
+    overlay.classList.add("flex", "opacity-0");
+    requestAnimationFrame(() => overlay.classList.replace("opacity-0", "opacity-100"));
+    document.getElementById("runForm").submit();
+  });
+
 });
