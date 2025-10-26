@@ -184,3 +184,31 @@ def refresh_cache():
     global _cache_recent
     _cache_recent = {"timestamp": 0, "data": None}
     return jsonify({"status": "cleared"})
+
+
+@radarr_bp.route("/api/debug/netinfo")
+def debug_netinfo():
+    """Debug endpoint: show how SubOrbit detects client network context."""
+    from flask import request
+
+    client_host = request.host.split(":")[0] if request.host else ""
+    remote_ip = request.remote_addr or ""
+    base = compute_ui_base()
+
+    # Simple Tailnet/LAN detection (same as compute_ui_base)
+    is_tailnet = (
+        client_host.startswith("100.")
+        or client_host.endswith(".ts.net")
+        or remote_ip.startswith("100.")
+        or remote_ip.startswith("fd7a:")
+    )
+
+    return jsonify(
+        {
+            "client_host": client_host,
+            "remote_ip": remote_ip,
+            "detected_mode": "tailnet" if is_tailnet else "lan",
+            "radarr_ui_base": base,
+            "radarr_api": Config.RADARR_API,
+        }
+    )
