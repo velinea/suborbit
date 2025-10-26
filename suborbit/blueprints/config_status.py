@@ -63,7 +63,7 @@ def config_status():
 
     # --- OpenSubtitles check ---
     try:
-        if getattr(Config, "OPENSUBTITLES_API_KEY", None):
+        if getattr(Config, "OS_API_KEY", None):
             data["opensubtitles"] = {"ok": True, "details": "Configured"}
         else:
             data["opensubtitles"]["details"] = "Missing API key"

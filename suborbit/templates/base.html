@@ -40,27 +40,52 @@
         <span id="app-version">&copy; SubOrbit</span>
 
         <script>
-            fetch("/api/config/status")
-                .then(r => r.json())
-                .then(info => {
+            async function loadSystemStatus() {
+                const container = document.getElementById("about-services");
+                if (!container) return;
+
+                container.innerHTML = "<p class='text-xs text-gray-400'>Loading system info...</p>";
+
+                try {
+                    const res = await fetch("/api/config/status");
+                    const info = await res.json();
+
+                    // Update version/build
                     document.getElementById("about-version").textContent = info.suborbit.version;
                     document.getElementById("about-build").textContent = info.suborbit.build;
 
+                    // Build integration status list
                     const services = ["radarr", "trakt", "opensubtitles"];
                     const statusHTML = services.map(s => {
                         const svc = info[s];
                         const color = svc.ok ? "text-green-400" : "text-red-400";
-                        return `<p class="text-xs ${color}">${s.charAt(0).toUpperCase() + s.slice(1)}: ${svc.details}</p>`;
+                        return `<p class="text-xs ${color}">
+                ${s.charAt(0).toUpperCase() + s.slice(1)}: ${svc.details}
+              </p>`;
                     }).join("");
 
-                    document.getElementById("about-radarr-mode").insertAdjacentHTML("afterend", `
-                    <div class="mt-2">${statusHTML}</div>
-                    <p class="text-xs text-gray-500 mt-2 italic">${info.summary}</p>
-                    `);
-                })
-                .catch(err => {
+                    container.innerHTML = `
+      <div class="mt-2">${statusHTML}</div>
+      <p class="text-xs text-gray-500 mt-2 italic">${info.summary}</p>
+    `;
+                } catch (err) {
                     console.error("Failed to fetch system info:", err);
-                });
+                    container.innerHTML = `<p class='text-xs text-red-400'>Error loading system info</p>`;
+                }
+            }
+
+            // Hook up modal open
+            document.getElementById("about-btn")?.addEventListener("click", () => {
+                document.getElementById("about-modal").classList.remove("hidden");
+                document.getElementById("about-card").classList.remove("scale-95", "opacity-0");
+                loadSystemStatus();
+            });
+
+            // Close modal
+            document.getElementById("about-close")?.addEventListener("click", () => {
+                document.getElementById("about-modal").classList.add("hidden");
+                document.getElementById("about-card").classList.add("scale-95", "opacity-0");
+            });
         </script>
 
         <!-- About modal -->
