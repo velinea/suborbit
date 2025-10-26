@@ -21,6 +21,7 @@ class Config:
     TRAKT_CLIENT_SECRET = os.getenv("TRAKT_CLIENT_SECRET", "")
     RADARR_API = os.getenv("RADARR_API", "http://192.168.1.200:7878/api/v3")
     RADARR_KEY = os.getenv("RADARR_KEY", "")
+    RADARR_HOST = os.getenv("RADARR_HOST", "")
 
     # ===== YEAR RANGE =====
     START_YEAR = int(os.getenv("START_YEAR", 2020))
