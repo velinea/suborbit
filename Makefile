@@ -20,18 +20,27 @@ clean:
 # ----------------------------------------
 # 🏷️ Version tagging and release
 # ----------------------------------------
-
 # Usage:
-#   make release v=1.2.3
-# Creates an annotated tag and pushes it to origin.
+#   make release v=1.2.3   → tags and pushes v1.2.3
+#   make release latest     → tags and pushes latest (no version)
+# ----------------------------------------
 
 release:
-	@if [ -z "$(v)" ]; then \
-		echo "❌ Error: please specify version, e.g. make release v=1.0.0"; \
+	@if [ "$(v)" = "latest" ]; then \
+		echo "🏷️  Tagging 'latest' release..."; \
+		git tag -f latest -m "Rolling latest release"; \
+		git push origin latest --force; \
+		echo "✅ 'latest' tag pushed successfully!"; \
+	elif [ -n "$(v)" ]; then \
+		if git rev-parse "v$(v)" >/dev/null 2>&1; then \
+        	echo "❌ Tag v$(v) already exists!"; \
+        	exit 1; \
+    	fi; \
+		echo "🏷️  Creating version tag v$(v)..."; \
+		git tag -a v$(v) -m "Release v$(v)"; \
+		git push origin v$(v); \
+		echo "✅ Tag v$(v) created and pushed successfully!"; \
+	else \
+		echo "❌ Error: please specify a version, e.g. 'make release v=1.0.0' or 'make release latest'"; \
 		exit 1; \
 	fi
-	@echo "🏷️  Creating git tag v$(v)..."
-	git tag -a v$(v) -m "Release v$(v)"
-	@echo "⬆️  Pushing tag v$(v) to origin..."
-	git push origin v$(v)
-	@echo "✅ Tag v$(v) created and pushed successfully!"
