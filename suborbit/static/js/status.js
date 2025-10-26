@@ -59,39 +59,51 @@ document.addEventListener("DOMContentLoaded", () => {
     const dot = document.getElementById("status-dot");
     const text = document.getElementById("status-text");
     const startBtn = document.getElementById("start-btn");
+    const stopForm = document.getElementById("stop-form");
 
     if (running) {
-      dot.className = "w-3 h-3 rounded-full bg-green-500 animate-pulse";
+      // 🟢 Running
+      dot.className = "inline-block w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-sm";
       text.textContent = "Running";
       text.className = "text-sm text-green-400";
-      startBtn.disabled = true;
-      startBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+      startBtn.style.display = "none";
+      stopForm.style.display = "inline";
     } else {
-      dot.className = "w-3 h-3 rounded-full bg-gray-500";
+      // ⚪ Idle
+      dot.className = "inline-block w-3 h-3 rounded-full bg-gray-500 shadow-sm";
       text.textContent = "Idle";
       text.className = "text-sm text-gray-400";
-      startBtn.disabled = false;
-      startBtn.classList.remove("opacity-50", "cursor-not-allowed");
+
+      startBtn.style.display = "inline";
+      stopForm.style.display = "none";
     }
   }
 
-  
   function updateStatus() {
-  fetch("/status")
-    .then(r => r.json())
-    .then(data => {
-      updateStatusDisplay(data.running);
-    })
-    .catch(err => console.error("Status fetch failed:", err));
+    fetch("/core/status")
+      .then(r => r.json())
+      .then(data => updateStatusDisplay(data.running))
+      .catch(err => console.error("Status fetch failed:", err));
   }
 
-  // ----------------------------------------
-  // 5️⃣ Polling setup
-  // ----------------------------------------
-  fetchLogs();
+  // Poll every 2 seconds
   updateStatus();
-  setInterval(fetchLogs, LOG_INTERVAL);
-  setInterval(updateStatus, STATUS_INTERVAL);
+  setInterval(updateStatus, 2000);
+
+  // Hook Start button to sidebar form
+  document.getElementById("start-btn").addEventListener("click", () => {
+    const form = document.getElementById("runForm");
+    if (form) form.submit();
+  });
+
+  // Auto-scroll preference
+  const checkbox = document.getElementById("autoscroll");
+  const saved = localStorage.getItem("autoscroll");
+  if (saved !== null) checkbox.checked = saved === "true";
+  checkbox.addEventListener("change", () => {
+    localStorage.setItem("autoscroll", checkbox.checked);
+  });
 
   console.debug("[SubOrbit] status.js initialized");
 });
