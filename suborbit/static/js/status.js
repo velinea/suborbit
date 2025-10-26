@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ----------------------------------------
   async function fetchLogs() {
     try {
-      const r = await fetch("/core/logs");
+      const r = await fetch("/logs");
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const lines = await r.json();
       logDiv.innerHTML = colorizeLogs(lines);
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ----------------------------------------
   async function updateStatus() {
     try {
-      const r = await fetch("/core/status");
+      const r = await fetch("/status");
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json();
 
