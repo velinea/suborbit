@@ -27,6 +27,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.CR_PAT }}
 
+      - name: Set build metadata
+        id: meta
+        run: echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M UTC')" >> $GITHUB_ENV
+
       - name: Build and push tagged image
         uses: docker/build-push-action@v6
         with:
@@ -35,7 +39,7 @@ jobs:
           platforms: linux/amd64
           build-args: |
             APP_VERSION=${{ github.ref_name }}
-            BUILD_DATE=${{ github.run_started_at }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
