@@ -258,38 +258,6 @@
         document.getElementById("refresh-posters")?.addEventListener("click", loadRecent);
     </script>
 
-
-
-    <!-- Header Row: Status + Start/Stop -->
-    <div class="bg-white/10 p-2 rounded-lg shadow flex flex-row items-center justify-between gap-4">
-
-        <!-- Status -->
-        <h2 class="text-lg font-bold">
-            Status:
-            <span id="status-text" class="font-mono {% if running %}text-green-400{% else %}text-gray-400{% endif %}">
-                {% if running %}Running...{% else %}Idle{% endif %}
-            </span>
-        </h2>
-
-        <!-- Buttons -->
-        <div class="flex gap-3">
-            <!-- Start button triggers sidebar form -->
-            <button id="start-btn" type="button"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold p-2 rounded-lg transition">
-                Start
-            </button>
-
-            <!-- Stop form -->
-            <form id="stop-form" method="post" action="{{ url_for('core.stop') }}" {% if not running
-                %}style="display:none" {% endif %}>
-                <button type="submit"
-                    class="bg-red-600 hover:bg-red-700 text-white font-semibold p-2 rounded-lg transition">
-                    Stop
-                </button>
-            </form>
-        </div>
-    </div>
-
     <!-- Results (future movies list) -->
     {% if movies %}
     <div class="bg-white/10 p-2 rounded-lg shadow">
@@ -307,11 +275,22 @@
 
     <!-- Logs -->
     <div class="flex-1 flex flex-col overflow-hidden bg-white/10 p-2 rounded-lg shadow">
-        <div class="flex flex-row items-center justify-between gap-4">
-            <h3 class="flex text-lg font-semibold mb-2">Logs</h3>
-            <div class="flex items-center gap-2 mb-2">
-                <input type="checkbox" id="autoscroll" checked class="w-4 h-4">
-                <label for="autoscroll" class="text-sm">Auto-scroll logs</label>
+        <!-- Logs header row -->
+        <div class="flex flex-row items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+                <div id="status-dot" class="w-3 h-3 rounded-full bg-gray-500 transition-colors"></div>
+                <span id="status-text" class="text-sm text-gray-400">Idle</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <label class="flex items-center gap-1 text-xs text-gray-400">
+                    <input type="checkbox" id="autoscroll" checked class="w-4 h-4"> Auto-scroll
+                </label>
+
+                <button id="start-btn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition">
+                    Start
+                </button>
             </div>
         </div>
         <div id="log" class="flex-1 overflow-y-auto bg-black text-green-400 p-3 rounded-lg font-mono text-sm"></div>

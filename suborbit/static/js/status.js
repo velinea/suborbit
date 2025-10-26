@@ -55,43 +55,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ----------------------------------------
-  // 4️⃣ Fetch core status
-  // ----------------------------------------
-  async function updateStatus() {
-    try {
-      const r = await fetch("/status");
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json();
+  function updateStatusDisplay(running) {
+    const dot = document.getElementById("status-dot");
+    const text = document.getElementById("status-text");
+    const startBtn = document.getElementById("start-btn");
 
-      if (data.running) {
-        const overlay = document.getElementById("loading-overlay");
-          if (overlay && !overlay.classList.contains("hidden")) {
-            overlay.classList.replace("opacity-100", "opacity-0");
-            setTimeout(() => overlay.classList.add("hidden"), 300);
-          }
-
-        statusSpan.textContent = "Running...";
-        statusSpan.className = "font-mono text-green-400";
-
-        startBtn.disabled = true;
-        startBtn.classList.add("opacity-50", "cursor-not-allowed");
-
-        stopForm.style.display = "inline";
-      } else {
-        statusSpan.textContent = "Idle";
-        statusSpan.className = "font-mono text-gray-400";
-
-        startBtn.disabled = false;
-        startBtn.classList.remove("opacity-50", "cursor-not-allowed");
-
-        stopForm.style.display = "none";
-      }
-    } catch (err) {
-      console.error("Status fetch failed:", err);
-      statusSpan.textContent = "Error";
-      statusSpan.className = "font-mono text-red-400";
+    if (running) {
+      dot.className = "w-3 h-3 rounded-full bg-green-500 animate-pulse";
+      text.textContent = "Running";
+      text.className = "text-sm text-green-400";
+      startBtn.disabled = true;
+      startBtn.classList.add("opacity-50", "cursor-not-allowed");
+    } else {
+      dot.className = "w-3 h-3 rounded-full bg-gray-500";
+      text.textContent = "Idle";
+      text.className = "text-sm text-gray-400";
+      startBtn.disabled = false;
+      startBtn.classList.remove("opacity-50", "cursor-not-allowed");
     }
+  }
+
+  
+  function updateStatus() {
+  fetch("/core/status")
+    .then(r => r.json())
+    .then(data => {
+      updateStatusDisplay(data.running);
+    })
+    .catch(err => console.error("Status fetch failed:", err));
   }
 
   // ----------------------------------------
