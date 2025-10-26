@@ -16,5 +16,6 @@ def create_app():
     app.register_blueprint(core_bp)
     app.register_blueprint(trakt_bp)
     app.register_blueprint(radarr_bp)
+    app.register_blueprint(config_status_bp)
 
     return app
