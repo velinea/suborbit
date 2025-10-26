@@ -22,7 +22,7 @@ clean:
 # ----------------------------------------
 # Usage:
 #   make release v=1.2.3   → tags and pushes v1.2.3
-#   make release latest     → tags and pushes latest (no version)
+#   make release v=latest     → tags and pushes latest (no version)
 # ----------------------------------------
 
 release:
@@ -41,6 +41,6 @@ release:
 		git push origin v$(v); \
 		echo "✅ Tag v$(v) created and pushed successfully!"; \
 	else \
-		echo "❌ Error: please specify a version, e.g. 'make release v=1.0.0' or 'make release latest'"; \
+		echo "❌ Error: please specify a version, e.g. 'make release v=1.0.0' or 'make release v=latest'"; \
 		exit 1; \
 	fi
