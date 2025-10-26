@@ -31,49 +31,6 @@
                         <div id="trakt-auth-status" class="text-xs mt-2"></div>
                     </div>
 
-                    <script>
-                        document.getElementById("trakt-login-btn").addEventListener("click", () => {
-                            document.getElementById("trakt-login-popup").classList.toggle("hidden");
-                        });
-
-                        document.getElementById("start-trakt-auth").addEventListener("click", async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-
-                            const statusDiv = document.getElementById("trakt-auth-status");
-                            statusDiv.innerHTML = "⏳ Requesting device code...";
-
-                            const res = await fetch("{{ url_for('trakt.trakt_device') }}");
-                            const data = await res.json();
-
-                            const url = `https://trakt.tv/activate?code=${data.user_code}`;
-                            statusDiv.innerHTML = `
-                    Go to <a href="${url}" target="_blank" class="text-blue-400 underline">trakt.tv/activate</a>
-                    and enter <b>${data.user_code}</b><br>⏳ Waiting for authorization...
-                `;
-
-                            // Poll backend for status updates
-                            const poll = setInterval(async () => {
-                                const r = await fetch("{{ url_for('trakt.trakt_status_route') }}");
-                                const s = await r.json();
-
-                                if (s.state === "done") {
-                                    clearInterval(poll);
-                                    statusDiv.innerHTML = "✅ Connected to Trakt!";
-                                    setTimeout(() => {
-                                        document.getElementById("trakt-login-popup").classList.add("hidden");
-                                        // Optional: reload page automatically to update state
-                                        location.reload();
-                                    }, 1500);
-                                } else if (s.state === "error") {
-                                    clearInterval(poll);
-                                    statusDiv.innerHTML = "❌ Authorization failed or timed out.";
-                                }
-                            }, 3000);
-                        });
-
-                    </script>
-
                     <button id="trakt-btn" type="button"
                         class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs">
                         + Trakt List
@@ -556,69 +513,5 @@
             });
         });
 
-    // === GENRE PICKER ===
 
-
-    // Show popup
-    document.getElementById("trakt-btn").addEventListener("click", () => {
-        document.getElementById("trakt-popup").classList.toggle("hidden");
-    });
-
-    // Save
-    document.getElementById("trakt-save").addEventListener("click", () => {
-        const user = document.getElementById("trakt-user-input").value.trim();
-        const list = document.getElementById("trakt-list-input").value.trim();
-        if (!user || !list) {
-            alert("Please enter both user and list name.");
-            return;
-        }
-
-        // Save to hidden inputs (for form submit)
-        document.getElementById("trakt_user").value = user;
-        document.getElementById("trakt_list").value = list;
-
-        // Optional: store to localStorage
-        localStorage.setItem("persist_trakt_user", user);
-        localStorage.setItem("persist_trakt_list", list);
-
-        // Close popup
-        document.getElementById("trakt-popup").classList.add("hidden");
-    });
-
-    // Cancel
-    document.getElementById("trakt-cancel").addEventListener("click", () => {
-        document.getElementById("trakt-popup").classList.add("hidden");
-    });
-
-    async function checkTraktStatus() {
-        try {
-            const r = await fetch("{{ url_for('trakt.trakt_status_route') }}");
-            const data = await r.json();
-
-            const btn = document.getElementById("trakt-login-btn");
-
-            if (data.authenticated) {
-                btn.innerText = `✅ Connected to Trakt`;
-                btn.classList.remove("bg-red-600", "hover:bg-red-700");
-                btn.classList.add("bg-green-600", "cursor-default");
-                btn.disabled = true; // prevent reopening popup
-            } else {
-                btn.innerText = "🔑 Login with Trakt";
-                btn.classList.remove("bg-green-600", "cursor-default");
-                btn.classList.add("bg-red-600", "hover:bg-red-700");
-                btn.disabled = false;
-            }
-        } catch (err) {
-            console.error("Trakt status check failed:", err);
-        }
-    }
-
-    // Run at page load
-    checkTraktStatus();
-
-    // Optionally re-check every minute
-    setInterval(checkTraktStatus, 60000);
-
-
-</script>
-{% endblock %}
+    {% endblock %}
