@@ -138,55 +138,6 @@
                 placeholder="en" value="{{ subtitle_lang }}" />
         </div>
 
-        <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                const langInput = document.getElementById("subtitle_lang");
-                const langHint = document.getElementById("langHint");
-                const storageKey = "persist_" + langInput.name;
-
-                const validLangs = [
-                    "en", "fr", "es", "de", "it", "pt", "ru", "zh", "ja", "ko",
-                    "sv", "fi", "no", "da", "pl", "nl", "tr", "ar", "he", "cs",
-                    "el", "th", "hu", "ro", "id", "uk"
-                ];
-
-                // ---------- Restore step ----------
-                const saved = localStorage.getItem(storageKey);
-                if (saved && saved.trim() !== "") {
-                    langInput.value = saved;
-                }
-                // Now backend default is visible if no saved value
-
-                // ---------- Validation ----------
-                function validate() {
-                    let val = langInput.value.replace(/[^a-zA-Z]/g, "").toLowerCase().slice(0, 2);
-                    langInput.value = val;
-
-                    const isValid = /^[a-z]{2}$/.test(val) && validLangs.includes(val);
-                    langInput.classList.toggle("border-green-500", isValid);
-                    langInput.classList.toggle("border-red-500", !isValid && val.length > 0);
-                    langHint.classList.toggle("opacity-100", !isValid && val.length > 0);
-                    langHint.classList.toggle("opacity-0", isValid || val.length === 0);
-
-                    // ---------- Persist valid changes ----------
-                    localStorage.setItem(storageKey, val);
-                }
-
-                // ---------- Events ----------
-                langInput.addEventListener("input", validate);
-                langInput.addEventListener("blur", () => {
-                    if (langInput.value.length === 1) {
-                        langInput.value = "";
-                        langHint.classList.add("opacity-100");
-                        localStorage.removeItem(storageKey);
-                    }
-                });
-
-                // Run initial validation after restore
-                validate();
-            });
-        </script>
-
         <div class="flex justify-between">
             <div class="flex w-1/3 items-center mx-2">
                 <input type="checkbox" name="randomize" value="1" {% if randomize %}checked{% endif %} id="randbox"
@@ -378,35 +329,6 @@
         }).join("<br>");
     }
 
-    // Restore saved state on load
-    window.addEventListener("DOMContentLoaded", () => {
-        const checkbox = document.getElementById("autoscroll");
-        const saved = localStorage.getItem("autoscroll");
-        if (saved !== null) {
-            checkbox.checked = (saved === "true");
-        }
-
-        // Save state when toggled
-        checkbox.addEventListener("change", () => {
-            localStorage.setItem("autoscroll", checkbox.checked);
-        });
-    });
-
-    // Validate form before submitting
-    document.getElementById("runForm").addEventListener("submit", function (e) {
-        const start = parseInt(this.start_year.value);
-        const end = parseInt(this.end_year.value);
-        if (start > end) {
-            alert("Start year cannot be greater than end year.");
-            e.preventDefault();
-        }
-    });
-
-    // Hook Start button to sidebar form
-    document.getElementById("start-btn").addEventListener("click", function () {
-        document.getElementById("runForm").submit();
-    });
-
     function fetchLogs() {
         fetch("{{ url_for('core.logs') }}")
             .then(r => r.json())
@@ -421,26 +343,6 @@
             });
     }
 
-    // Restore values
-    document.querySelectorAll(".persist").forEach(el => {
-        const saved = localStorage.getItem("persist_" + el.name);
-        if (saved !== null) {
-            if (el.type === "checkbox") {
-                el.checked = (saved === "true");
-            } else {
-                el.value = saved;
-            }
-        }
-
-        // Save values on change
-        el.addEventListener("change", () => {
-            if (el.type === "checkbox") {
-                localStorage.setItem("persist_" + el.name, el.checked);
-            } else {
-                localStorage.setItem("persist_" + el.name, el.value);
-            }
-        });
-    });
 
     // Restore autoscroll (already added earlier)
     const autoscroll = document.getElementById("autoscroll");
@@ -484,21 +386,6 @@
     updateStatus();
     setInterval(fetchLogs, 2000);
     fetchLogs();
-
-    // Reset filters button
-    document.getElementById("reset-filters").addEventListener("click", () => {
-        // Clear each persistent input
-        document.querySelectorAll(".persist").forEach(el => {
-            if (el.type === "checkbox") {
-                el.checked = false;
-            } else {
-                el.value = "";
-            }
-            localStorage.removeItem("persist_" + el.name);
-        });
-        // Reload page so defaults from backend are shown
-        location.reload();
-    });
 
 </script>
 {% endblock %}
