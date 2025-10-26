@@ -49,6 +49,40 @@
                 .catch(() => {
                     document.getElementById("app-version").textContent = "SubOrbit (dev)";
                 });
+
+            // --- Radarr status ---
+            fetch("/api/radarr/status")
+                .then(r => r.json())
+                .then(data => {
+                    const el = document.getElementById("about-radarr");
+                    if (data.ok) {
+                        el.textContent = `✅ ${data.name} ${data.version || ""}`;
+                        el.classList.add("text-green-400");
+                    } else {
+                        el.textContent = `❌ ${data.error || "Unavailable"}`;
+                        el.classList.add("text-red-400");
+                    }
+                })
+                .catch(() => {
+                    document.getElementById("about-radarr").textContent = "❌ Unreachable";
+                });
+
+            // --- Trakt status ---
+            fetch("{{ url_for('trakt.trakt_status_route') }}")
+                .then(r => r.json())
+                .then(data => {
+                    const el = document.getElementById("about-trakt");
+                    if (data.authenticated) {
+                        el.textContent = "✅ Connected";
+                        el.classList.add("text-green-400");
+                    } else {
+                        el.textContent = "❌ Not connected";
+                        el.classList.add("text-red-400");
+                    }
+                })
+                .catch(() => {
+                    document.getElementById("about-trakt").textContent = "❌ Unreachable";
+                });
         </script>
 
         <!-- About modal -->
@@ -70,6 +104,10 @@
 
                     <p class="text-sm mb-1"><strong>Version:</strong> <span id="about-version">-</span></p>
                     <p class="text-sm mb-1"><strong>Build Date:</strong> <span id="about-build">-</span></p>
+                    <hr class="my-2 border-gray-700">
+
+                    <p class="text-sm mb-1"><strong>Radarr:</strong> <span id="about-radarr">Checking…</span></p>
+                    <p class="text-sm mb-3"><strong>Trakt:</strong> <span id="about-trakt">Checking…</span></p>
                     <p class="text-sm mb-3"><strong>Repo:</strong>
                         <a id="about-repo" href="#" class="text-blue-400 hover:underline" target="_blank">GitHub</a>
                     </p>

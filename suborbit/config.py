@@ -19,7 +19,7 @@ class Config:
     OMDB_KEY = os.getenv("OMDB_KEY", "")
     TRAKT_CLIENT_ID = os.getenv("TRAKT_CLIENT_ID", "")
     TRAKT_CLIENT_SECRET = os.getenv("TRAKT_CLIENT_SECRET", "")
-    RADARR_API = os.getenv("RADARR_API", "http://tower:7878/api/v3")
+    RADARR_API = os.getenv("RADARR_API", "http://192.168.1.200:7878/api/v3")
     RADARR_KEY = os.getenv("RADARR_KEY", "")
 
     # ===== YEAR RANGE =====

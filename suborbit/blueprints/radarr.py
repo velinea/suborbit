@@ -4,8 +4,9 @@ from ..config import Config
 
 radarr_bp = Blueprint("radarr", __name__)
 
+# In-memory cache (10 min)
 _cache = {"timestamp": 0, "data": None}
-_CACHE_TTL = 600  # seconds (10 minutes)
+_CACHE_TTL = 600  # seconds
 
 
 def radarr_base_url():
@@ -16,6 +17,34 @@ def radarr_base_url():
     return api_url
 
 
+@radarr_bp.route("/api/radarr/status")
+def status():
+    """Quick health check: verify Radarr connectivity and API key validity."""
+    api_url = Config.RADARR_API.rstrip("/")
+    api_key = Config.RADARR_KEY
+    if not api_url or not api_key:
+        return jsonify({"ok": False, "error": "Radarr not configured"}), 400
+
+    try:
+        url = f"{api_url}/system/status"
+        headers = {"X-Api-Key": api_key}
+        r = requests.get(url, headers=headers, timeout=5)
+        r.raise_for_status()
+        data = r.json()
+
+        # Basic useful details
+        version = data.get("version")
+        name = data.get("appName", "Radarr")
+
+        return jsonify(
+            {"ok": True, "name": name, "version": version, "url": radarr_base_url()}
+        )
+    except requests.exceptions.RequestException as e:
+        return jsonify({"ok": False, "error": f"Connection failed: {e}"}), 500
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @radarr_bp.route("/api/radarr/recent")
 def recent():
     """Return recently added movies from Radarr (cached for 10 min)."""
@@ -24,7 +53,7 @@ def recent():
         return jsonify(_cache["data"])
 
     api_url = Config.RADARR_API.rstrip("/")
-    api_key = Config.RADARR_KEY  # ✅ correct variable name
+    api_key = Config.RADARR_KEY
 
     if not api_url or not api_key:
         return jsonify({"error": "Radarr not configured"}), 400
@@ -32,11 +61,11 @@ def recent():
     try:
         url = f"{api_url}/movie"
         headers = {"X-Api-Key": api_key}
-        r = requests.get(url, headers=headers, timeout=10)
-        r.raise_for_status()
-        movies = r.json()
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        movies = resp.json()
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Failed to reach Radarr: {e}"}), 500
 
     movies = sorted(movies, key=lambda m: m.get("added", ""), reverse=True)
     base_ui = radarr_base_url()
@@ -52,22 +81,23 @@ def recent():
                     img = path if path.startswith("http") else f"{base_ui}{path}"
                     break
 
-        # Ratings
+        # Rating preference
         rating = None
-        ratings = m.get("ratings", {})
+        ratings = m.get("ratings") or {}
         if "imdb" in ratings and ratings["imdb"].get("value"):
             rating = ratings["imdb"]["value"]
         elif "tmdb" in ratings and ratings["tmdb"].get("value"):
             rating = ratings["tmdb"]["value"]
+        elif ratings.get("value"):
+            rating = ratings["value"]
 
-        # URLs
         tmdb_id = m.get("tmdbId")
         imdb_id = m.get("imdbId")
+        radarr_id = m.get("id")
 
-        base_ui = radarr_base_url()
         radarr_url = (
-            f"{base_ui}/movie/{tmdb_id or m.get('id')}"
-            if (tmdb_id or m.get("id"))
+            f"{base_ui}/movie/{tmdb_id or radarr_id}"
+            if (tmdb_id or radarr_id)
             else None
         )
         tmdb_url = f"https://www.themoviedb.org/movie/{tmdb_id}" if tmdb_id else None
