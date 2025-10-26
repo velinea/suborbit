@@ -44,3 +44,38 @@ release:
 		echo "❌ Error: please specify a version, e.g. 'make release v=1.0.0' or 'make release v=latest'"; \
 		exit 1; \
 	fi
+
+# ----------------------------------------
+# 🔼 Auto version bumping
+# ----------------------------------------
+# Usage:
+#   make bump patch   → v1.0.1
+#   make bump minor   → v1.1.0
+#   make bump major   → v2.0.0
+#
+# Reads latest git tag, increments semver, creates & pushes new tag
+
+bump:
+	@type=$(type); \
+	if [ -z "$$type" ]; then \
+		echo "❌ Error: specify type (patch|minor|major), e.g. make bump type=minor"; \
+		exit 1; \
+	fi; \
+	last=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
+	echo "🔢 Last version: $$last"; \
+	ver=$$(echo $$last | sed 's/^v//'); \
+	major=$$(echo $$ver | cut -d. -f1); \
+	minor=$$(echo $$ver | cut -d. -f2); \
+	patch=$$(echo $$ver | cut -d. -f3); \
+	case "$$type" in \
+		major) major=$$((major+1)); minor=0; patch=0 ;; \
+		minor) minor=$$((minor+1)); patch=0 ;; \
+		patch) patch=$$((patch+1)) ;; \
+		*) echo "❌ Invalid type: $$type"; exit 1 ;; \
+	esac; \
+	new="v$$major.$$minor.$$patch"; \
+	echo "🏷️  Creating new tag $$new..."; \
+	git tag -a $$new -m "Release $$new"; \
+	git push origin $$new; \
+	echo "✅ Tagged and pushed $$new successfully!"
+# ----------------------------------------

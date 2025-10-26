@@ -44,6 +44,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 
 ARG APP_VERSION=dev
 ENV APP_VERSION=$APP_VERSION
+ARG BUILD_DATE=unspecified
+ENV BUILD_DATE=${BUILD_DATE}
 
 LABEL org.opencontainers.image.title="SubOrbit"
 LABEL org.opencontainers.image.description="Movie discovery app with subtitles, Radarr & Trakt integration."
