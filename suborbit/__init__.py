@@ -5,6 +5,7 @@ from .config import Config
 from .blueprints.core import core_bp
 from .blueprints.trakt import trakt_bp
 from .blueprints.radarr import radarr_bp
+from .blueprints.config_status import config_status_bp
 
 
 def create_app():
