@@ -41,45 +41,23 @@ def fetch_status():
 
 def compute_ui_base():
     """
-    Build the correct Radarr UI base (for clickable poster/movie links).
-
+    Build the correct Radarr UI base for clickable links (not API calls).
     - SubOrbit always talks to Radarr using Config.RADARR_API (LAN)
-    - Tailnet clients automatically get Radarr links using their own host/IP
-    - Works for Tailnet IPs (100.x.x.x), Tailscale DNS (.ts.net), or IPv6 (fd7a:)
+    - Tailnet users get poster links using their own host (100.x.x.x or *.ts.net)
     """
     api = urlparse(Config.RADARR_API)
     scheme = api.scheme
     port = api.port or 7878
-
-    # Try fetching Radarr /system/status (cached) to detect any custom urlBase (like /radarr)
     status, _ = fetch_status()
     url_base = (status or {}).get("urlBase", "") or ""
 
-    # Detect connection type
+    # Detect if this client connected via Tailnet
     client_host = request.host.split(":")[0] if request.host else ""
-    remote_ip = request.remote_addr or ""
-
-    is_tailnet = (
-        client_host.startswith("100.")
-        or client_host.endswith(".ts.net")
-        or remote_ip.startswith("100.")
-        or remote_ip.startswith("fd7a:")  # IPv6 Tailnet range
-    )
-
-    if is_tailnet:
-        # Prefer the host the client actually used in the request
-        if client_host and (
-            client_host.startswith("100.") or client_host.endswith(".ts.net")
-        ):
-            host_for_ui = client_host
-        else:
-            # Fall back to the remote IP if the Host header is local-only (e.g. "tower")
-            host_for_ui = remote_ip
+    if client_host.startswith("100.") or client_host.endswith(".ts.net"):
+        host_for_ui = client_host
     else:
-        # Regular LAN access
         host_for_ui = api.hostname
 
-    # Compose final base URL (strip /api/*, append urlBase if any)
     return f"{scheme}://{host_for_ui}:{port}{url_base}"
 
 
