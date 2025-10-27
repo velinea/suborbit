@@ -96,12 +96,66 @@ document.addEventListener("DOMContentLoaded", () => {
   // ----------------------------------------
   // 5️⃣ Hook start button
   // ----------------------------------------
-  const startBtn = document.getElementById("start-btn");
-  if (startBtn) {
-    startBtn.addEventListener("click", () => form.submit());
-  }
+  document.getElementById("start-btn").addEventListener("click", async () => {
+    const form = document.getElementById("runForm");
+    const formData = new FormData(form);
 
-  console.debug("[SubOrbit] form.js initialized");
+    const startBtn = document.getElementById("start-btn");
+    const stopForm = document.getElementById("stop-form");
+    const statusText = document.getElementById("status-text");
+    const statusDot = document.getElementById("status-dot");
+
+    startBtn.disabled = true;
+    startBtn.classList.add("opacity-50", "cursor-not-allowed");
+    statusText.textContent = "Starting...";
+    statusText.className = "text-yellow-400";
+    statusDot.className = "w-3 h-3 rounded-full bg-yellow-400";
+
+    try {
+      const res = await fetch(form.action, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (data.status === "started") {
+        statusText.textContent = "Running...";
+        statusText.className = "text-green-400";
+        statusDot.className = "w-3 h-3 rounded-full bg-green-400 shadow-sm";
+        stopForm.style.display = "inline";
+      } else {
+        throw new Error(data.status || "Unknown error");
+      }
+    } catch (err) {
+      console.error("Failed to start discovery:", err);
+      statusText.textContent = "Error";
+      statusText.className = "text-red-400";
+      statusDot.className = "w-3 h-3 rounded-full bg-red-500";
+      startBtn.disabled = false;
+      startBtn.classList.remove("opacity-50", "cursor-not-allowed");
+    }
+  });
+
+  document.getElementById("stop-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+    try {
+      const res = await fetch("/stop", { method: "POST" });
+      const data = await res.json();
+      if (data.status === "stopped") {
+        const statusText = document.getElementById("status-text");
+        const statusDot = document.getElementById("status-dot");
+        statusText.textContent = "Idle";
+        statusText.className = "text-gray-400";
+        statusDot.className = "w-3 h-3 rounded-full bg-gray-400";
+        document.getElementById("stop-form").style.display = "none";
+        const startBtn = document.getElementById("start-btn");
+        startBtn.disabled = false;
+        startBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      }
+    } catch (err) {
+      console.error("Failed to stop discovery:", err);
+    }
+  });
 
   // ----------------------------------------
   // 6️⃣ Show loading overlay on start

@@ -48,45 +48,34 @@ def index():
 
 @core_bp.route("/start", methods=["POST"])
 def start():
-    global process_thread
-    cfg = current_app.config
+    """Start the discovery process asynchronously."""
+    if core_service.is_running():  # if you already track running jobs
+        return jsonify({"status": "already_running"}), 400
 
-    if process_thread and process_thread.is_alive():
-        return redirect(url_for("core.index"))
+    # Example: extract form fields if you need them
+    form = request.form.to_dict()
+    print("Starting discovery with form:", form)
 
-    # Read submitted form data
-    form = request.form
-    args = {
-        "start_year": int(form.get("start_year", cfg["START_YEAR"])),
-        "end_year": int(form.get("end_year", cfg["END_YEAR"])),
-        "min_tmdb": float(form.get("min_tmdb", cfg["MIN_TMDB_RATING"])),
-        "min_imdb": float(form.get("min_imdb", cfg["MIN_IMDB_RATING"])),
-        "min_rt": int(form.get("min_rt", cfg["MIN_RT_SCORE"])),
-        "max_movies": int(form.get("max_movies", cfg["MAX_MOVIES_PER_RUN"])),
-        "max_pages": int(form.get("max_pages", cfg["MAX_DISCOVER_PAGES"])),
-        "subtitle_lang": form.get("subtitle_lang", cfg["SUBTITLE_LANG"]),
-        "min_vote_count": int(form.get("min_vote_count", cfg["MIN_VOTE_COUNT"])),
-        "randomize": bool(form.get("randomize")),
-        "trakt_user": form.get("trakt_user", "").strip() or None,
-        "trakt_list": form.get("trakt_list", "").strip() or None,
-    }
+    # Run discovery in background thread (so response returns fast)
+    def run_discovery():
+        try:
+            core_service.run(form)  # your actual logic here
+        except Exception as e:
+            print("Discovery error:", e)
 
-    include, exclude = parse_genres(form.get("genres", ""))
+    threading.Thread(target=run_discovery, daemon=True).start()
 
-    def run_process():
-        main_process(include_genres=include, exclude_genres=exclude, **args)
-
-    process_thread = threading.Thread(target=run_process, daemon=True)
-    process_thread.start()
-    time.sleep(1)
-
-    return redirect(url_for("core.index"))
+    # Return immediate JSON response (no reload)
+    return jsonify({"status": "started"})
 
 
 @core_bp.route("/stop", methods=["POST"])
 def stop():
-    request_stop()
-    return redirect(url_for("core.index"))
+    """Stop the running discovery."""
+    stopped = core_service.stop()
+    if stopped:
+        return jsonify({"status": "stopped"})
+    return jsonify({"status": "not_running"}), 400
 
 
 @core_bp.route("/status")
