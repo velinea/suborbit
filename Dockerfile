@@ -14,6 +14,8 @@ COPY suborbit/static/src ./suborbit/static/src
 
 RUN npx tailwindcss -i ./suborbit/static/src/input.css -o ./suborbit/static/css/tailwind.css --minify
 
+RUN echo "✅ Tailwind CSS built successfully at $(date)"
+
 
 # ------------------------------------------------------------
 # 🐍 Stage 2: Build Python backend
