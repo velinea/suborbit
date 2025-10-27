@@ -11,8 +11,10 @@ import threading, time, json, os
 from pathlib import Path
 from ..suborbit_core import main_process, log, LOG_PATH, request_stop, get_tmdb_genres
 from datetime import datetime, timezone
+from ..suborbit_core import SubOrbitCore
 
 core_bp = Blueprint("core", __name__)
+core_service = SubOrbitCore()
 
 process_thread = None
 
