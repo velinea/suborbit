@@ -7,6 +7,7 @@ module.exports = {
   safelist: [
     "group",
     "group-hover:opacity-100",
+    "group-hover:opacity-70",
     "opacity-0",
     "opacity-70",
     "bg-gray-900/80",
