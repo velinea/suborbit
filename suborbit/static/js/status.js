@@ -81,15 +81,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateStatus() {
-    fetch("/status")
-      .then(r => r.json())
-      .then(data => updateStatusDisplay(data.running))
-      .catch(err => console.error("Status fetch failed:", err));
+  fetch("/status")
+    .then(r => r.json())
+    .then(data => {
+      updateStatusDisplay(data.running);
+    })
+    .catch(err => console.error("Status fetch failed:", err));
   }
 
-  // Poll every 2 seconds
+  // ----------------------------------------
+  // 5️⃣ Polling setup
+  // ----------------------------------------
+  fetchLogs();
   updateStatus();
-  setInterval(updateStatus, 2000);
+  setInterval(fetchLogs, LOG_INTERVAL);
+  setInterval(updateStatus, STATUS_INTERVAL);
+
 
   // Hook Start button to sidebar form
   document.getElementById("start-btn").addEventListener("click", () => {

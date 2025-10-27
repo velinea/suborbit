@@ -76,6 +76,6 @@ bump:
 	new="v$$major.$$minor.$$patch"; \
 	echo "🏷️  Creating new tag $$new..."; \
 	git tag -a $$new -m "Release $$new"; \
-	git push origin $$new; \
+	git push origin main $$new; \
 	echo "✅ Tagged and pushed $$new successfully!"
 # ----------------------------------------
