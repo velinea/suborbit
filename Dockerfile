@@ -31,6 +31,9 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR $APP_HOME
 
+# Install system deps (curl useful for healthchecks)
+RUN apt update && apt install -y curl vim && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -38,7 +41,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY suborbit ./suborbit
 
 # Copy compiled CSS from frontend stage
-COPY --from=frontend /app/suborbit/static/css ./suborbit/static/css
+COPY --from=tailwind /app/static/css/tailwind.css ./static/css/tailwind.css
 
 EXPOSE 5000
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "suborbit.app:app"]
