@@ -26,16 +26,16 @@ document.addEventListener("DOMContentLoaded", () => {
           ? m.overview.replace(/"/g, "&quot;").substring(0, 300)
           : "No description available.";
 
+        // === Poster Card ===
         const card = document.createElement("div");
-        card.className = "relative group h-64 w-44 flex-shrink-0 cursor-pointer snap-start";
+        card.className =
+          "relative group h-64 w-44 flex-shrink-0 cursor-pointer snap-start animate-fadeIn";
 
         card.innerHTML = `
           <!-- Poster -->
-          <a href="${m.radarr || '#'}" target="_blank" rel="noopener noreferrer"
-            class="relative block h-64 w-44 flex-shrink-0 snap-start group">
+          <a href="${m.radarr || '#'}" target="_blank" rel="noopener noreferrer" class="block relative h-full w-full">
             <img src="${m.poster}" alt="${m.title}"
-                class="h-full w-full object-cover rounded-lg shadow-lg transition
-                        duration-300 group-hover:opacity-70" />
+                 class="h-full w-full object-cover rounded-lg shadow-lg transition duration-300 group-hover:opacity-70" />
 
             <!-- Static info bar -->
             <div class="absolute bottom-0 left-0 right-0 bg-gray-900/80 text-gray-100 text-xs p-2 rounded-b-lg z-10">
@@ -53,25 +53,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <!-- Top-right icons -->
             <div class="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100
-                        transition-opacity z-30">
+                        transition-opacity duration-300 z-30">
               ${m.tmdb ? `
                 <a href="${m.tmdb}" target="_blank" rel="noopener noreferrer"
-                  class="bg-gray-900/70 hover:bg-gray-900/90 rounded p-1 shadow">
+                   class="bg-gray-900/70 hover:bg-gray-900/90 rounded p-1 shadow">
                   <img src="/static/icons/tmdb.png" class="h-4 w-4" alt="TMDB">
                 </a>` : ""}
               ${m.imdb ? `
                 <a href="${m.imdb}" target="_blank" rel="noopener noreferrer"
-                  class="bg-gray-900/70 hover:bg-gray-900/90 rounded p-1 shadow">
+                   class="bg-gray-900/70 hover:bg-gray-900/90 rounded p-1 shadow">
                   <img src="/static/icons/imdb.png" class="h-4 w-4" alt="IMDb">
                 </a>` : ""}
             </div>
           </a>
         `;
 
+        // Add fade-in timing for smooth carousel load
         card.style.animationDelay = `${Math.random() * 0.3}s`;
-        card.style.opacity = "0";
         carousel.appendChild(card);
-        setTimeout(() => { card.style.transition = "opacity 0.4s"; card.style.opacity = "1"; }, 10);
       }
     } catch (err) {
       console.error("Radarr fetch failed:", err);
@@ -79,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Load on page ready
+  // Initial load
   loadRecent();
 
   // Manual refresh
