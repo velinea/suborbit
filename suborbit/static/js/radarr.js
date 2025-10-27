@@ -1,16 +1,14 @@
-// static/js/radarr.js
 document.addEventListener("DOMContentLoaded", () => {
-  const cfg = window.SubOrbitConfig?.urls || {};
-  const refreshBtn = document.getElementById("refresh-posters");
   const carousel = document.getElementById("poster-carousel");
-
-  if (!carousel) return;
+  const refreshBtn = document.getElementById("refresh-posters");
 
   async function loadRecent() {
+    if (!carousel) return;
+
     carousel.innerHTML = "<p class='text-gray-400 text-sm'>Loading...</p>";
 
     try {
-      const res = await fetch(cfg.radarrRecent);
+      const res = await fetch("/api/radarr/recent");
       const data = await res.json();
       carousel.innerHTML = "";
 
@@ -32,10 +30,10 @@ document.addEventListener("DOMContentLoaded", () => {
         card.className = "relative group h-64 w-44 flex-shrink-0 cursor-pointer snap-start";
 
         card.innerHTML = `
-          <a href="${m.radarr || "#"}" target="_blank" rel="noopener noreferrer">
+          <a href="${m.radarr || '#'}" target="_blank" rel="noopener noreferrer">
             <img src="${m.poster}" alt="${m.title}"
-                 class="h-64 w-44 object-cover rounded-lg shadow-md opacity-100 transition
-                        group-hover:opacity-70 animate-fadeIn">
+              class="h-64 w-44 object-cover rounded-lg shadow-md opacity-100 transition
+                     group-hover:opacity-70 animate-fadeIn">
           </a>
 
           <div class="absolute bottom-0 left-0 right-0 bg-gray-900/80 text-gray-100 text-xs p-2 rounded-b-lg">
@@ -67,12 +65,15 @@ document.addEventListener("DOMContentLoaded", () => {
         card.style.animationDelay = `${Math.random() * 0.3}s`;
         carousel.appendChild(card);
       }
-    } catch (e) {
-      console.error("Radarr fetch failed:", e);
+    } catch (err) {
+      console.error("Radarr fetch failed:", err);
       carousel.innerHTML = `<p class='text-red-400 text-sm'>Error loading posters.</p>`;
     }
   }
 
+  // Load on page ready
   loadRecent();
+
+  // Manual refresh
   refreshBtn?.addEventListener("click", loadRecent);
 });
