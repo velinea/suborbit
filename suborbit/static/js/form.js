@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Polling ---
   async function updateStatus() {
     try {
-      const res = await fetch("/api/status");
+      const res = await fetch("/status");
       const data = await res.json();
 
       if (data.running) {
