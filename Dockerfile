@@ -1,19 +1,23 @@
-# ------------------------------------------------------------
-# 🧱 Stage 1: Build Tailwind CSS
-# ------------------------------------------------------------
-FROM node:22-alpine AS frontend
+# ==============================
+# 🧱 STAGE 1: Build Tailwind CSS
+# ==============================
+FROM node:20-alpine AS tailwind
 
+# Create working directory
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+# Copy only what Tailwind needs
+COPY package.json package-lock.json* tailwind.config.js ./
+COPY static/css ./static/css
+COPY templates ./templates
+COPY static/js ./static/js
 
-COPY tailwind.config.js postcss.config.js ./
-COPY suborbit/templates ./suborbit/templates
-COPY suborbit/static/src ./suborbit/static/src
+# Install dependencies (cached)
+RUN npm ci
 
-RUN npx tailwindcss -i ./suborbit/static/src/input.css -o ./suborbit/static/css/tailwind.css --minify
-
+# Build the CSS
+RUN npm run build:css
+RUN echo "✅ Tailwind CSS built successfully at $(date)"
 
 # ------------------------------------------------------------
 # 🐍 Stage 2: Build Python backend
