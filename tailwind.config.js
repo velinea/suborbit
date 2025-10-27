@@ -1,6 +1,22 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./suborbit/templates/**/*.html", "./suborbit/static/js/**/*.js"],
+  content: [
+    "./suborbit/templates/**/*.html",
+    "./suborbit/static/js/**/*.js"
+  ],
+  safelist: [
+    "group",
+    "group-hover:opacity-100",
+    "opacity-0",
+    "opacity-70",
+    "bg-gray-900/80",
+    "bg-gray-900/90",
+    "z-10",
+    "z-20",
+    "z-30",
+    "absolute",
+    "relative"
+  ],
   theme: {
     extend: {
       keyframes: {
@@ -14,5 +30,7 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require("@tailwindcss/line-clamp"),
+  ],
 };
