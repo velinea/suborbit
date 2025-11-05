@@ -178,6 +178,7 @@ def recent():
         )
         tmdb_url = f"https://www.themoviedb.org/movie/{tmdb_id}" if tmdb_id else None
         imdb_url = f"https://www.imdb.com/title/{imdb_id}" if imdb_id else None
+        trakt_url = f"https://trakt.tv/movies/{imdb_id}" if imdb_id else None
 
         recent.append(
             {
@@ -189,6 +190,7 @@ def recent():
                 "radarr": radarr_url,
                 "tmdb": tmdb_url,
                 "imdb": imdb_url,
+                "trakt": trakt_url,
             }
         )
 
