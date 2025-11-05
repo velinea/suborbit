@@ -9,7 +9,7 @@ SubOrbit discovers movies with subtitles in your chosen language, filters them b
 
 ## ✨ Features
 
-- 🎞️ Fetch movies with subtitles in any language (OpenSubtitles integration)
+
 - 🔍 Filter by TMDB, IMDB, and Rotten Tomatoes ratings
 - 🎲 Optional random selection for variety
 - 🧩 Radarr integration (add filtered movies automatically)
@@ -30,7 +30,7 @@ docker run -d \
   -p 5000:5000 \
   -v /mnt/user/appdata/suborbit:/config \
   --env-file /mnt/user/appdata/suborbit/.env \
-  ghcr.io/yourusername/suborbit:latest
+  ghcr.io/velinea/suborbit:latest
 ```
 Open web UI http://localhost:5000
 
@@ -46,6 +46,7 @@ TRAKT_CLIENT_ID=        # https://trakt.tv
 TRAKT_CLIENT_SECRET=
 
 RADARR_API=http://localhost:7878/api/v3
+RADARR_HOST=            # Optional, the url client can use to connect to Radarr, if not on the same LAN (e.g. Tailscale name/ip)
 RADARR_KEY=
 
 # YEARS
@@ -59,7 +60,7 @@ MIN_RT_SCORE=70
 
 USE_TMDB=true
 USE_IMDB=true
-USE_RT=true
+USE_RT=true             # Note: all movies don'thave RT rating
 
 # RADARR
 QUALITY_PROFILE_ID=4    # Wanted profile in Radarr, normally start from 1
@@ -76,8 +77,8 @@ RANDOM_SELECTION=true
 # EXTRA FILTERS
 MIN_VOTE_COUNT=1000
 ALLOWED_GENRES=
-MAX_DISCOVER_PAGES=     # TMDB discovery returns 20 items per page
-SUBTITLE_LANG=          # 2-letter ISO 639-1 language code
+MAX_DISCOVER_PAGES=5    # TMDB discovery returns 20 items per page
+SUBTITLE_LANG=FI        # 2-letter ISO 639-1 language code
 
 ```
 ---
@@ -142,36 +143,12 @@ make css
 
 | Tag    | Description          |
 | ------ | -------------------- |
-| latest | Stable release       |
-| dev    | Development snapshot |
-| vX.Y.Z | Specific version     |
+| latest | Development release       |
+| vX.Y.Z | Stable version     |
 
----
-## 🧩 Folder Structure
-```
-suborbit/
-├── app.py                  # Flask web interface
-├── finsubs_core.py         # Core processing logic
-├── config.py               # Configuration / .env loader
-├── .env                    # Configuration
-├── static/
-│   ├── css/tailwind.css    # Built Tailwind stylesheet
-│   ├── src/input.css       # Tailwind source
-│   └── octopus_logo.png    # Logo
-├── templates/
-│   └── index.html          # Main web UI, scripts
-|   └── base.html           # Global layout (Tailwind, header/footer)
-└── Dockerfile
-```
 ---
 ## 💡 Example Screenshots
 Web UI	Log View
-
----	
-## 🪴 Contributing
-
-Contributions are welcome!
-Feel free to open issues or PRs for bug fixes, new features, or translations.
 
 ---
 ## 🪪 License

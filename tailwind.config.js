@@ -5,7 +5,13 @@ module.exports = {
     "./suborbit/static/js/**/*.js"
   ],
   safelist: [
-    "group",
+        // --- Dynamic status indicators ---
+    { pattern: /bg-(green|gray|red|yellow)-(400|500)/ },
+    { pattern: /text-(green|gray|red|yellow)-(300|400|500)/ },
+    'inline-block',
+    'rounded-full',
+    'shadow-sm',
+    'animate-pulse',
     "group-hover:opacity-100",
     "group-hover:opacity-70",
     "opacity-0",
