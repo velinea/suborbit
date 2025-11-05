@@ -6,8 +6,8 @@ module.exports = {
   ],
   safelist: [
         // --- Dynamic status indicators ---
-    { pattern: /bg-(green|gray|red|yellow)-(400|500)/ },
-    { pattern: /text-(green|gray|red|yellow)-(300|400|500)/ },
+    { pattern: /bg-(green|gray|red|yellow)-(400|500|600)/ },
+    { pattern: /text-(green|gray|red|yellow)-(300|400|500|600)/ },
     'inline-block',
     'rounded-full',
     'shadow-sm',

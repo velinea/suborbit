@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (s.state === "done") {
           clearInterval(poll);
-          statusDiv.innerHTML = "✅ Connected to Trakt!";
+          statusDiv.innerHTML = "✅ Connected";
           setTimeout(() => {
             loginPopup.classList.add("hidden");
             location.reload();
@@ -99,12 +99,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
 
       if (data.authenticated) {
-        loginBtn.textContent = "✅ Connected to Trakt";
+        loginBtn.textContent = "✅ Connected";
         loginBtn.classList.remove("bg-red-600", "hover:bg-red-700");
         loginBtn.classList.add("bg-green-600", "cursor-default");
         loginBtn.disabled = true;
       } else {
-        loginBtn.textContent = "🔑 Login with Trakt";
+        loginBtn.textContent = "🔑 Login";
         loginBtn.classList.remove("bg-green-600", "cursor-default");
         loginBtn.classList.add("bg-red-600", "hover:bg-red-700");
         loginBtn.disabled = false;
