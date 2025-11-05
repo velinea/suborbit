@@ -37,6 +37,8 @@ def index():
         min_tmdb=cfg["MIN_TMDB_RATING"],
         min_imdb=cfg["MIN_IMDB_RATING"],
         min_rt=cfg["MIN_RT_SCORE"],
+        use_tmdb=cfg["USE_TMDB"],
+        use_imdb=cfg["USE_IMDB"],
         use_rt=cfg["USE_RT"],
         max_movies=cfg["MAX_MOVIES_PER_RUN"],
         max_pages=cfg["MAX_DISCOVER_PAGES"],

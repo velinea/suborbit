@@ -100,19 +100,21 @@
 
         <div class="flex">
             <label class="w-3/4 py-1 px-2">Min TMDB Rating</label>
-            <input type="number" step="0.1" name="min_tmdb" value="{{ min_tmdb }}" required
+            <input type="number" step="0.1" name="min_tmdb" value="{{ min_tmdb }}" required {% if not use_tmdb
+                %}disabled title="TMDB filter disabled in config" {% endif %}
                 class="persist w-1/4 py-1 px-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
         </div>
 
         <div class="flex">
             <label class="w-3/4 py-1 px-2">Min IMDB Rating</label>
-            <input type="number" step="0.1" name="min_imdb" value="{{ min_imdb }}" required
+            <input type="number" step="0.1" name="min_imdb" value="{{ min_imdb }}" required {% if not use_imdb
+                %}disabled title="IMDB filter disabled in config" {% endif %}
                 class="persist w-1/4 py-1 px-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
         </div>
 
         <div class="flex">
             <label class="w-3/4 py-1 px-2">Min RT Score</label>
-            <input type="number" name="min_rt" value="{{ min_rt }}" {% if not use_rt %}disabled
+            <input type="number" name="min_rt" value="{{ min_rt }}" required {% if not use_rt %}disabled
                 title="RT filter disabled in config" {% endif %}
                 class="persist w-1/4 py-1 px-2 rounded-lg text-black focus:ring-2 focus:ring-blue-500">
         </div>
