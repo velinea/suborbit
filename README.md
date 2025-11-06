@@ -1,9 +1,9 @@
 # 🪐 SubOrbit
 
 **Smart subtitle-aware movie fetcher for Radarr users.**  
-SubOrbit discovers movies with subtitles in your chosen language, filters them by ratings, and adds them directly to Radarr — all through a clean Flask + Tailwind web UI or a simple CLI.
+SubOrbit discovers movies with subtitles in your chosen language, filters them by ratings, and adds them directly to Radarr — all through a clean Flask + Tailwind web UI.
 
-![SubOrbit Screenshot](docs/screenshot.png)
+![SubOrbit Screenshot](docs/suborbit1.png)
 
 ---
 
@@ -90,21 +90,9 @@ SUBTITLE_LANG=FI        # 2-letter ISO 639-1 language code
 - Adjust filters and start/stop runs 
 - Follow progress live in the log window
 
-#### CLI mode
-
-- Inside the container:
-```bash
-python3 -m finsubs_core
-```
-
 ---
 ### 🧩 Unraid Installation
 ---
-
-- Add the SubOrbit template repository:
-```
-https://github.com/yourusername/unraid-templates
-```
 
 - Find SubOrbit in the Unraid “Apps” tab and click Install.
 - Configure /config volume and .env settings.
@@ -147,8 +135,8 @@ make css
 | vX.Y.Z | Stable version     |
 
 ---
-## 💡 Example Screenshots
-Web UI	Log View
+## 💡 Example Screenshot
+![SubOrbit Screenshot](docs/suborbit2.png)
 
 ---
 ## 🪪 License
