@@ -80,14 +80,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function updateStatus() {
-  fetch("/status")
-    .then(r => r.json())
-    .then(data => {
-      updateStatusDisplay(data.running);
-    })
-    .catch(err => console.error("Status fetch failed:", err));
+ 
+  let lastState = "Idle";
+
+  async function updateStatus() {
+    try {
+      const res = await fetch("/status");
+      const data = await res.json();
+
+      const running = data.running;
+      updateStatusDisplay(running);
+
+      if (running) {
+        // While discovery runs, check for new posters
+        checkForPosterUpdate();
+      } else if (lastState === "Running" && !running) {
+        // 🚀 Discovery just finished
+        console.log("Discovery completed — refreshing posters");
+        setTimeout(() => loadRecent(), 1000); // small delay for Radarr sync
+      }
+
+      lastState = running ? "Running" : "Idle";
+    } catch (err) {
+      console.error("Status fetch failed:", err);
+    }
   }
+
 
   // ----------------------------------------
   // 5️⃣ Polling setup
