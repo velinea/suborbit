@@ -691,7 +691,6 @@ def main_process(
                 ok, msg = radarr_add(tmdb_id, basic["title"], Config.ROOT_FOLDER)
                 if ok:
                     total_added += 1
-                    mark_radarr_updated()
                     log(
                         f"🎬 added to Radarr: {basic['title']} ({basic['year']}) "
                         #                        f"| TMDb {basic.get('tmdb_rating')} | IMDb {basic.get('imdb_rating')} | RT {basic.get('rt_score')}"
@@ -721,7 +720,6 @@ def main_process(
 
         save_cache(cache)
         log(f"=== Summary: added={total_added}, years={start_year}-{end_year} ===")
-        mark_radarr_updated()
 
     except RuntimeError:
         log(f"Run stopped by user")
