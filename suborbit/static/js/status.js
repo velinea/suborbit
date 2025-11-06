@@ -95,13 +95,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // While discovery runs, check for new posters
         checkForPosterUpdate();
 
-        // Hide overlay if still visible
-        const overlay = document.getElementById("loading-overlay");
-        if (overlay && !overlay.classList.contains("hidden")) {
-          overlay.classList.replace("opacity-100", "opacity-0");
-          setTimeout(() => overlay.classList.add("hidden"), 300);
-        }
-
       } else if (lastState === "Running" && !running) {
         // 🚀 Discovery just finished
         console.log("Discovery completed — refreshing posters");
