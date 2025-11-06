@@ -46,7 +46,8 @@ TRAKT_CLIENT_ID=        # https://trakt.tv
 TRAKT_CLIENT_SECRET=
 
 RADARR_API=http://localhost:7878/api/v3
-RADARR_HOST=            # Optional, the url client can use to connect to Radarr, if not on the same LAN (e.g. Tailscale name/ip)
+RADARR_HOST=            # Optional, the url client can use to connect to Radarr,
+                        # if not on the same LAN (e.g. Tailscale name/ip)
 RADARR_KEY=
 
 # YEARS
@@ -139,9 +140,11 @@ make css
 ![SubOrbit Screenshot](docs/suborbit2.png)
 
 ---
-## 🪪 License
+## 🧾 Notes
 
-MIT License
+- Built automatically with [GitHub Actions](https://github.com/velinea/suborbit/actions/workflows/docker.yml)
+- Prebuilt TailwindCSS bundle — no Node inside runtime image
+- License: [MIT](https://github.com/velinea/suborbit/blob/main/LICENSE)
 
 ---
 ## 🌟 Acknowledgments
