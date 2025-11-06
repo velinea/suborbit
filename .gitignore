@@ -7,7 +7,6 @@
 cache.json
 finsubs_movies.csv
 test/
-docs/
 
 # ------------------------------
 # Node / Tailwind build
