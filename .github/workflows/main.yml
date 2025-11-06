@@ -2,7 +2,7 @@ name: Build and Push Latest
 
 on:
   push:
-    branches: [ main ]
+    branches: [ uxdev ]
     tags:
       - latest
 
