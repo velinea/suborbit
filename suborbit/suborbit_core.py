@@ -10,8 +10,7 @@ import requests
 from .config import Config
 
 
-def run(self, form_data):
-    from suborbit.blueprints.radarr import mark_radarr_updated
+from suborbit.blueprints.radarr import mark_radarr_updated
 
 
 # ----------------- Stop mechanism -----------------
@@ -722,6 +721,7 @@ def main_process(
 
         save_cache(cache)
         log(f"=== Summary: added={total_added}, years={start_year}-{end_year} ===")
+        mark_radarr_updated()
 
     except RuntimeError:
         log(f"Run stopped by user")
