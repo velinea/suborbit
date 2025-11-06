@@ -8,6 +8,7 @@ from typing import Dict, Any, List, Tuple, Optional
 import requests
 
 from .config import Config
+from ..blueprints.radarr import mark_radarr_updated
 
 
 # ----------------- Stop mechanism -----------------
@@ -688,6 +689,7 @@ def main_process(
                 ok, msg = radarr_add(tmdb_id, basic["title"], Config.ROOT_FOLDER)
                 if ok:
                     total_added += 1
+                    mark_radarr_updated()
                     log(
                         f"🎬 added to Radarr: {basic['title']} ({basic['year']}) "
                         #                        f"| TMDb {basic.get('tmdb_rating')} | IMDb {basic.get('imdb_rating')} | RT {basic.get('rt_score')}"

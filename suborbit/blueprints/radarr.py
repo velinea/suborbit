@@ -128,8 +128,8 @@ def status():
 def recent():
     """Return recently added movies (cached 10 min)."""
     now = time.time()
-    if _cache_recent["data"] and now - _cache_recent["timestamp"] < _CACHE_TTL:
-        return jsonify(_cache_recent["data"])
+    # if _cache_recent["data"] and now - _cache_recent["timestamp"] < _CACHE_TTL:
+    #     return jsonify(_cache_recent["data"])
 
     api_url = Config.RADARR_API.rstrip("/")
     api_key = Config.RADARR_KEY
@@ -205,3 +205,25 @@ def refresh_cache():
     global _cache_recent
     _cache_recent = {"timestamp": 0, "data": None}
     return jsonify({"status": "cleared"})
+
+
+_refresh_flag = {"recent_update": False}
+
+
+def mark_radarr_updated():
+    _refresh_flag["recent_update"] = True
+
+
+@radarr_bp.route("/api/radarr/mark_updated", methods=["POST"])
+def mark_updated():
+    """Manually mark Radarr cache for refresh (optional external trigger)."""
+    mark_radarr_updated()
+    return jsonify({"status": "marked"})
+
+
+@radarr_bp.route("/api/radarr/check_update")
+def check_update():
+    """Return whether carousel should refresh."""
+    val = _refresh_flag["recent_update"]
+    _refresh_flag["recent_update"] = False
+    return jsonify({"update": val})

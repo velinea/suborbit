@@ -53,6 +53,6 @@ LABEL org.opencontainers.image.title="SubOrbit"
 LABEL org.opencontainers.image.description="Movie discovery app with subtitles, Radarr & Trakt integration."
 LABEL org.opencontainers.image.version=$APP_VERSION
 LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.url="https://github.com/<user>/suborbit"
-LABEL io.unraid.docker.icon="https://raw.githubusercontent.com/<user>/suborbit/main/suborbit/static/octopus_logo.png"
+LABEL org.opencontainers.image.url="https://github.com/velinea/suborbit"
+LABEL io.unraid.docker.icon="https://raw.githubusercontent.com/velinea/suborbit/main/suborbit/static/octopus_logo.png"
 
