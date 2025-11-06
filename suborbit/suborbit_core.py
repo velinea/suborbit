@@ -8,7 +8,10 @@ from typing import Dict, Any, List, Tuple, Optional
 import requests
 
 from .config import Config
-from ..blueprints.radarr import mark_radarr_updated
+
+
+def run(self, form_data):
+    from suborbit.blueprints.radarr import mark_radarr_updated
 
 
 # ----------------- Stop mechanism -----------------
