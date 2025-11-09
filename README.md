@@ -94,9 +94,23 @@ SUBTITLE_LANG=FI        # 2-letter ISO 639-1 language code
 ---
 ### 🧩 Unraid Installation
 ---
+In Unraid, go to Docker tab
 
-- Find SubOrbit in the Unraid “Apps” tab and click Install.
-- Configure /config volume and .env settings.
+Click Add Container and Advanced view
+
+Configure as follows:
+```
+Name: suborbit
+Repository: ghcr.io/velinea/suborbit:latest
+Icon url: https://raw.githubusercontent.com/velinea/suborbit/main/static/octopus_logo.png
+Network Type: bridge
+Port: 5000 → 5000
+Path: /mnt/cache/appdata/suborbit → /config
+```
+Click Apply.
+
+Copy .env.example to /mnt/cache/appdata/suborbit,
+rename to .env and edit the settings.
 
 Access via http://[server_ip]:5000.
 
