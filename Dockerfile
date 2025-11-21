@@ -10,7 +10,7 @@ RUN npm install
 
 COPY tailwind.config.js postcss.config.js ./
 COPY suborbit/templates ./suborbit/templates
-COPY suborbit/static/src ./suborbit/static/src
+COPY suborbit/static ./suborbit/static
 
 RUN npx tailwindcss -i ./suborbit/static/src/input.css -o ./suborbit/static/css/tailwind.css --minify
 
