@@ -9,7 +9,6 @@ SubOrbit discovers movies with subtitles in your chosen language, filters them b
 
 ## ✨ Features
 
-
 - 🔍 Filter by TMDB, IMDB, and Rotten Tomatoes ratings
 - 🎲 Optional random selection for variety
 - 🧩 Radarr integration (add filtered movies automatically)
@@ -32,11 +31,13 @@ docker run -d \
   --env-file /mnt/user/appdata/suborbit/.env \
   ghcr.io/velinea/suborbit:latest
 ```
+
 Open web UI http://localhost:5000
 
 ### 2. Configuration (.env)
 
 Example:
+
 ```
 # API KEYS
 TMDB_API_KEY=           # https://api.themoviedb.org/3/discover/movie
@@ -72,7 +73,7 @@ SEARCH_FOR_MOVIE=false  # Start searching movie after adding to Radarr
 QUIET_MODE=false        # Print messages to log file
 DEBUG=true              # Print info/debug messages on Log window
 MAX_MOVIES_PER_RUN=5
-OS_DELAY=3              # Delay (s) between queries to Opensubtitles.com 
+OS_DELAY=3              # Delay (s) between queries to Opensubtitles.com
 RANDOM_SELECTION=true
 
 # EXTRA FILTERS
@@ -82,31 +83,40 @@ MAX_DISCOVER_PAGES=5    # TMDB discovery returns 20 items per page
 SUBTITLE_LANG=FI        # 2-letter ISO 639-1 language code
 
 ```
+
 ---
+
 ### 🧠 Usage
+
 ---
+
 #### Web UI
 
 - Access the dashboard at http://localhost:5000.
-- Adjust filters and start/stop runs 
+- Adjust filters and start/stop runs
 - Follow progress live in the log window
 
 ---
+
 ### 🧩 Unraid Installation
+
 ---
+
 In Unraid, go to Docker tab
 
 Click Add Container and Advanced view
 
 Configure as follows:
+
 ```
 Name: suborbit
 Repository: ghcr.io/velinea/suborbit:latest
-Icon url: https://raw.githubusercontent.com/velinea/suborbit/main/static/octopus_logo.png
+Icon url: https://raw.githubusercontent.com/velinea/suborbit/main/static/logo.png
 Network Type: bridge
 Port: 5000 → 5000
 Path: /mnt/cache/appdata/suborbit → /config
 ```
+
 Click Apply.
 
 Copy .env.example to /mnt/cache/appdata/suborbit,
@@ -115,21 +125,25 @@ rename to .env and edit the settings.
 Access via http://[server_ip]:5000.
 
 ---
+
 ## 🛠️ Build locally
 
 #### Build and run locally
+
 ```
 docker build -t suborbit .
 docker run -p 5000:5000 suborbit
 ```
 
 To rebuild Tailwind CSS (if you edit templates):
+
 ```
 make css
 ```
----
-## 🧾Environment Overview
 
+---
+
+## 🧾Environment Overview
 
 | Component                     | Purpose                           |
 | ----------------------------- | --------------------------------- |
@@ -141,19 +155,22 @@ make css
 | Radarr API                    | Add filtered movies automatically |
 
 ---
-## 📦 Docker Tags
-	
 
-| Tag    | Description          |
-| ------ | -------------------- |
-| latest | Development release       |
-| vX.Y.Z | Stable version     |
+## 📦 Docker Tags
+
+| Tag    | Description         |
+| ------ | ------------------- |
+| latest | Development release |
+| vX.Y.Z | Stable version      |
 
 ---
+
 ## 💡 Example Screenshot
+
 ![SubOrbit Screenshot](docs/suborbit2.png)
 
 ---
+
 ## 🧾 Notes
 
 - Built automatically with [GitHub Actions](https://github.com/velinea/suborbit/actions/workflows/docker.yml)
@@ -161,6 +178,7 @@ make css
 - License: [MIT](https://github.com/velinea/suborbit/blob/main/LICENSE)
 
 ---
+
 ## 🌟 Acknowledgments
 
 - OpenSubtitles.org

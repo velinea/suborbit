@@ -55,5 +55,5 @@ LABEL org.opencontainers.image.description="Movie discovery app with subtitles, 
 LABEL org.opencontainers.image.version=$APP_VERSION
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.url="https://github.com/velinea/suborbit"
-LABEL io.unraid.docker.icon="https://raw.githubusercontent.com/velinea/suborbit/main/suborbit/static/octopus_logo.png"
+LABEL io.unraid.docker.icon="https://raw.githubusercontent.com/velinea/suborbit/main/suborbit/static/logo.png"
 
